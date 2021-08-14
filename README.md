@@ -3,5 +3,5 @@
 
 # Contributers
 * Rajat Singh
-* Chhavi Agrawal
+* Chhavi Agarwal
 * Shreyans J Nagori
