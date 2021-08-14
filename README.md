@@ -1,1 +1,1 @@
-# data-mining-col761
+# Data Mining (COL761)
