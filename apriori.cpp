@@ -225,7 +225,7 @@ int main(int argc, char ** argv)
 	dataset_path = argv[1];
 	map<ll,ll> item_freq= frequency();
 	freopen(argv[3], "w", stdout);
-	float x = stof(argv[2]);
+	float x = stof(argv[2])*0.01;
 	int no_of_orders = transaction_count();
 	int threshold = ceil(x* no_of_orders);
 
