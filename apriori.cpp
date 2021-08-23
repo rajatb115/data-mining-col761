@@ -3,13 +3,24 @@
 #include <string.h>
 #include <set>
 #include <map>
-//#include <pair.h>
+#include <bits/stdc++.h>
 #include <math.h>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
-typedef long long int ll;
+typedef int ll;
 
 char* dataset_path;
+
+vector< vector<ll> > frequent_set;
+vector< vector<ll> > prev_set;
+
+vector< vector<ll> > candidate_set;
+vector< vector<ll> > next_set;
+vector<ll> count_subsets;
+ll freq_set_size;
 
 
 // Returns number of transactions in a dataset.
@@ -56,16 +67,11 @@ pair<map <ll,ll>,ll> frequency()
     fclose(fp);
     if (line)
         free(line);
-    
+
     return make_pair(individual_freq,count);
 }
 
-vector< vector<ll> > frequent_set;
-vector< vector<ll> > prev_set;
-vector< vector<ll> > candidate_set;
-vector< vector<ll> > next_set;
-vector<ll> count_subsets;
-ll freq_set_size;
+
 
 // Checks if itemset i and itemset j can be combined
 bool check_combine(vector <ll> v1,vector <ll> v2)
@@ -124,6 +130,7 @@ void generate_candidates()
 			{
 				continue;
 			}
+            
 			bool allowed_candidate = true;
 			vector<ll> v_store = prev_set[i];
 			v_store.push_back(prev_set[j][freq_set_size-1]);
@@ -134,18 +141,21 @@ void generate_candidates()
 				{
 					break;
 				}
-				vector<ll> store_res = subset_gen(v_store,i);
+				
+                vector<ll> store_res = subset_gen(v_store,i);
 				if(!check_if_exists(store_res))
 				{
 					allowed_candidate = false;
 					break;
 				}
+                
 			}
 
 			if(allowed_candidate)
 			{
 				candidate_set.push_back(v_store);
 			}
+            
 		}
 	}
 }
@@ -174,7 +184,7 @@ bool is_subset(vector<ll>v1,vector<ll>v2)
 }
 
 //Counts no of orders which are supersets for each candidate set
-void count_total_subsets()
+void count_total_subsets(int threshold)
 {
 	int count = 0;
 	FILE * fp;
@@ -183,7 +193,11 @@ void count_total_subsets()
 	ssize_t read;
 	fp = fopen(dataset_path, "r");
 	ll size = candidate_set.size();
-	while ((read = getline(&line, &len, fp)) != -1) 
+    
+    // tmp toggle when itemset count reached to certain threshold
+    // bool tmp = false;
+    
+	while ((read = getline(&line, &len, fp)) != -1 ) 
 	{
 		vector<ll> v_store;
 		char *ptr = strtok(line, " ");
@@ -193,14 +207,23 @@ void count_total_subsets()
 			v_store.push_back(store);
 			ptr = strtok(NULL, " ");
 		}
+        
 		for(ll i=0;i<size;i++)
 		{
+            
+            if(count_subsets[i]<threshold)
+            
 			if(is_subset(candidate_set[i],v_store))
 			{
 				count_subsets[i]++;
+                
+                // if(count_subsets[i]>=threshold){
+                //    tmp = true;
+                // }
 			}
 		}
     }
+    
 }
 
 //Filters the sets for required frequency threshold
@@ -212,7 +235,7 @@ void filter_set(int threshold)
 	{
 		count_subsets.push_back(0);
 	}
-	count_total_subsets();
+	count_total_subsets(threshold);
 	for(ll i=0;i<size;i++)
 	{
 		if(count_subsets[i]>=threshold)
@@ -230,16 +253,15 @@ int main(int argc, char ** argv)
     
 	dataset_path = argv[1];
 	pair<map<ll,ll>,ll> item_freq_count= frequency();
-    map<ll,ll> item_freq = item_freq_count.first;
+   	 map<ll,ll> item_freq = item_freq_count.first;
     
 	freopen(argv[3], "w", stdout);
-	float x = stof(argv[2])*0.01;
+	float x = atof(argv[2])*0.01;
 	ll no_of_orders = item_freq_count.second;
 	ll threshold = ceil(x* no_of_orders);
-
-	map <ll,ll>::iterator it;
-	for(it= item_freq.begin(); it!= item_freq.end(); it++)
-	{
+    
+    map <ll,ll>::iterator it;
+	for(it= item_freq.begin(); it!= item_freq.end(); it++){
 		if(it->second >= threshold)
 		{
 			vector<ll> v1;
@@ -248,6 +270,7 @@ int main(int argc, char ** argv)
 			prev_set.push_back(v1);
 		}
 	}
+    
 	while(prev_set.size()>0)
 	{
 		generate_candidates();
@@ -255,13 +278,16 @@ int main(int argc, char ** argv)
 		prev_set = next_set;
 		next_set.clear();
 	}
+   	
+	
 	for(ll i=0;i<frequent_set.size();i++)
 	{
 		for(ll j=0;j<frequent_set[i].size();j++)
-		{
-			cout<<frequent_set[i][j]<<" ";
+		{	
+ 			cout<< frequent_set[i][j]<<" ";  
 		}
-		cout<<endl;
+		cout<<"\n";
 	}
+    
 	return 0;
 }
