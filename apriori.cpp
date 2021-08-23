@@ -3,18 +3,19 @@
 #include <string.h>
 #include <set>
 #include <map>
+//#include <pair.h>
 #include <math.h>
 
 using namespace std;
-typedef int ll;
+typedef long long int ll;
 
 char* dataset_path;
 
 
 // Returns number of transactions in a dataset.
-int transaction_count()
+/*ll transaction_count()
 {
-	int count = 0;
+	ll count = 0;
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
@@ -28,13 +29,13 @@ int transaction_count()
     if (line)
         free(line);
     return count;
-}
+}*/
 
 //Frequency in a map generator function generating map of frequency of item.
-map <ll,ll> frequency()
+pair<map <ll,ll>,ll> frequency()
 {
 	map<ll,ll> individual_freq;
-	int count = 0;
+	ll count = 0;
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
@@ -42,6 +43,7 @@ map <ll,ll> frequency()
 	fp = fopen(dataset_path, "r");
 	while ((read = getline(&line, &len, fp)) != -1) 
 	{
+        count++;
 		char *ptr = strtok(line, " ");
 		while(ptr!=NULL)
 		{
@@ -54,7 +56,8 @@ map <ll,ll> frequency()
     fclose(fp);
     if (line)
         free(line);
-    return individual_freq;
+    
+    return make_pair(individual_freq,count);
 }
 
 vector< vector<ll> > frequent_set;
@@ -220,14 +223,19 @@ void filter_set(int threshold)
 	}
 }
 
+
+
 int main(int argc, char ** argv)
 {
+    
 	dataset_path = argv[1];
-	map<ll,ll> item_freq= frequency();
+	pair<map<ll,ll>,ll> item_freq_count= frequency();
+    map<ll,ll> item_freq = item_freq_count.first;
+    
 	freopen(argv[3], "w", stdout);
 	float x = stof(argv[2])*0.01;
-	int no_of_orders = transaction_count();
-	int threshold = ceil(x* no_of_orders);
+	ll no_of_orders = item_freq_count.second;
+	ll threshold = ceil(x* no_of_orders);
 
 	map <ll,ll>::iterator it;
 	for(it= item_freq.begin(); it!= item_freq.end(); it++)
