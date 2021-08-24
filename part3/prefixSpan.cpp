@@ -1,8 +1,8 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-void frequent_sequence(vector<list<string>> database,map<string,int> link,string key, int sup,string seq,int iter,ofstream &outputFile){
-    vector<list<string>> projectedDB;
+void frequent_sequence(vector<list<string> > database,map<string,int> link,string key, int sup,string seq,int iter,ofstream &outputFile){
+    vector<list<string> > projectedDB;
     for(auto j = database.begin(); j!= database.end(); j++){
         list<string> temp;
        for(auto k = j->begin(); k!= j->end(); k++){
@@ -77,7 +77,7 @@ int main(int argc, char ** argv){
     outputFile.open(argv[3]);
     string line;
     map<string,int> link;
-    vector<list<string>> database;
+    vector<list<string> > database;
     if(!inputFile.is_open())
     {
             exit(EXIT_FAILURE);
