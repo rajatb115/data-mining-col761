@@ -1,7 +1,7 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-void frequent_sequence(vector<list<string>> database,map<string,int> link,string key, int sup,queue<string> seq){
+void frequent_sequence(vector<list<string>> database,map<string,int> link,string key, int sup,string seq,int iter){
     vector<list<string>> projectedDB;
     for(auto j = database.begin(); j!= database.end(); j++){
         list<string> temp;
@@ -11,6 +11,7 @@ void frequent_sequence(vector<list<string>> database,map<string,int> link,string
                break;
            }
        }
+       if(temp.size() != 0)
        projectedDB.push_back(temp);
     }
     
@@ -39,18 +40,29 @@ void frequent_sequence(vector<list<string>> database,map<string,int> link,string
         else
             ++i;
     }
-    if(countSup.size()==0){
+
+	//cout<<iter<<"th iteration \n";
+	//cout<<seq<<"\n";
+
+    //if(countSup.size()==0){
         //print stack
-        while (!seq.empty())
+        /*while (!seq.empty())
         {
             cout <<seq.front()<<" ";
             seq.pop();
         }
         cout<<"\n";
-    }
+	*/
+	cout<<seq<<"\n";
+    //}
     for(auto i = countSup.begin(); i!= countSup.end(); i++){
-        seq.push(i->first);
-        frequent_sequence(projectedDB,countSup,i->first,sup,seq);
+	//cout<<iter<<"th iteration \n";
+	//cout<<i->first<<" "<<i->second<<"\n";
+        //seq.push(i->first);
+	string appSeq = seq;
+	appSeq.append(" ");
+	appSeq.append(i->first);
+        frequent_sequence(projectedDB,countSup,i->first,sup,appSeq,iter+1);
     }
 
 
@@ -59,7 +71,7 @@ void frequent_sequence(vector<list<string>> database,map<string,int> link,string
 int main(){
     ifstream inputFile;
     ofstream outputFile;
-    int support = 100;
+    int support = 2500;
     inputFile.open("paths_finished.dat");
 	outputFile.open("frequent_path.dat");
     string line;
@@ -98,9 +110,13 @@ int main(){
             ++i;
     }
     for(auto i = link.begin(); i!= link.end(); i++){
-        queue<string> seq;
-        seq.push(i->first);
-        frequent_sequence(database,link,i->first,support,seq);
+	//cout<<i->first<<" "<<i->second<<"\n";
+        //queue<string> seq;
+	string seq = i->first;
+        //seq.push(i->first);
+        frequent_sequence(database,link,i->first,support,seq,0);
     }
     //cout<<count;
 }
+
+
