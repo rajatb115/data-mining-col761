@@ -3,7 +3,6 @@
 #include <string.h>
 #include <set>
 #include <map>
-#include <bits/stdc++.h>
 #include <math.h>
 #include <string>
 #include <sstream>
@@ -16,11 +15,31 @@ char* dataset_path;
 
 vector< vector<ll> > frequent_set;
 vector< vector<ll> > prev_set;
+
 vector< vector<ll> > candidate_set;
 vector< vector<ll> > next_set;
 vector<ll> count_subsets;
 ll freq_set_size;
 
+
+// Returns number of transactions in a dataset.
+/*ll transaction_count()
+{
+	ll count = 0;
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	fp = fopen(dataset_path, "r");
+	while ((read = getline(&line, &len, fp)) != -1) 
+	{
+		count++;
+    }
+    fclose(fp);
+    if (line)
+        free(line);
+    return count;
+}*/
 
 //Frequency in a map generator function generating map of frequency of item.
 pair<map <ll,ll>,ll> frequency()
@@ -50,6 +69,8 @@ pair<map <ll,ll>,ll> frequency()
 
     return make_pair(individual_freq,count);
 }
+
+
 
 // Checks if itemset i and itemset j can be combined
 bool check_combine(vector <ll> v1,vector <ll> v2)
@@ -98,37 +119,29 @@ bool check_if_exists(vector<ll>v1)
 void generate_candidates()
 {
 	candidate_set.clear();
-	
 	ll size = prev_set.size();
 	freq_set_size = prev_set[0].size();
-	
 	for(ll i=0;i<size;i++)
 	{
 		for(ll j=i+1;j<size;j++)
 		{
-			// Checking if we can combine the given two sets
 			if(!check_combine(prev_set[i],prev_set[j]))
 			{
 				continue;
 			}
             
 			bool allowed_candidate = true;
-			
-			// {1,2,3} + {1,2,4} = {1,2,3,4}
 			vector<ll> v_store = prev_set[i];
 			v_store.push_back(prev_set[j][freq_set_size-1]);
-			
-			
-			// ???? Do we need this (we can do this in O(1))
-			for(ll i=0;i<=freq_set_size;i++)
+
+			for(ll k=0;k<=freq_set_size;k++)
 			{
 				if(freq_set_size==1)
 				{
 					break;
 				}
 				
-				
-                		vector<ll> store_res = subset_gen(v_store,i);
+                vector<ll> store_res = subset_gen(v_store,k);
 				if(!check_if_exists(store_res))
 				{
 					allowed_candidate = false;
@@ -198,14 +211,12 @@ void count_total_subsets(int threshold)
 		{
             
             if(count_subsets[i]<threshold)
-            
-			if(is_subset(candidate_set[i],v_store))
-			{
-				count_subsets[i]++;
-                
-                // if(count_subsets[i]>=threshold){
-                //    tmp = true;
-                // }
+            {
+				if(is_subset(candidate_set[i],v_store))
+				{
+					count_subsets[i]++;
+				}
+          
 			}
 		}
     }
@@ -233,33 +244,25 @@ void filter_set(int threshold)
 }
 
 
+
 int main(int argc, char ** argv)
 {
-	
+    
 	dataset_path = argv[1];
-	
-	// counting the frequency of all the elements (1-Reading the whole file)
 	pair<map<ll,ll>,ll> item_freq_count= frequency();
-   	map<ll,ll> item_freq = item_freq_count.first;
-    	ll no_of_orders = item_freq_count.second;
-	
-	// output file
+   	 map<ll,ll> item_freq = item_freq_count.first;
+    
 	freopen(argv[3], "w", stdout);
-	
-	// threshold (taking ceil)
 	float x = atof(argv[2])*0.01;
+	ll no_of_orders = item_freq_count.second;
 	ll threshold = ceil(x* no_of_orders);
     
-        // Since we are storing the data in a map so the data will be sorted
-	// O(size of item_freq)
-	map <ll,ll>::iterator it;
+    map <ll,ll>::iterator it;
 	for(it= item_freq.begin(); it!= item_freq.end(); it++){
 		if(it->second >= threshold)
 		{
 			vector<ll> v1;
 			v1.push_back(it->first);
-			
-			// frequent_set will be sorted
 			frequent_set.push_back(v1);
 			prev_set.push_back(v1);
 		}
@@ -269,7 +272,6 @@ int main(int argc, char ** argv)
 	{
 		generate_candidates();
 		filter_set(threshold);
-		
 		prev_set = next_set;
 		next_set.clear();
 	}
