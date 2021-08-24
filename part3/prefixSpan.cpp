@@ -1,7 +1,7 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-void frequent_sequence(vector<list<string>> database,map<string,int> link,string key, int sup,string seq,int iter){
+void frequent_sequence(vector<list<string>> database,map<string,int> link,string key, int sup,string seq,int iter,ofstream &outputFile){
     vector<list<string>> projectedDB;
     for(auto j = database.begin(); j!= database.end(); j++){
         list<string> temp;
@@ -53,7 +53,7 @@ void frequent_sequence(vector<list<string>> database,map<string,int> link,string
         }
         cout<<"\n";
 	*/
-	cout<<seq<<"\n";
+	outputFile<<seq<<"\n";
     //}
     for(auto i = countSup.begin(); i!= countSup.end(); i++){
 	//cout<<iter<<"th iteration \n";
@@ -62,27 +62,30 @@ void frequent_sequence(vector<list<string>> database,map<string,int> link,string
 	string appSeq = seq;
 	appSeq.append(" ");
 	appSeq.append(i->first);
-        frequent_sequence(projectedDB,countSup,i->first,sup,appSeq,iter+1);
+        frequent_sequence(projectedDB,countSup,i->first,sup,appSeq,iter+1,outputFile);
     }
 
 
 }
 
-int main(){
+int main(int argc, char ** argv){
     ifstream inputFile;
     ofstream outputFile;
-    int support = 2500;
-    inputFile.open("paths_finished.dat");
-	outputFile.open("frequent_path.dat");
+    //cout<<argv[1]<<argv[2]<<argv[3];
+    float x = atof(argv[2])*0.01;
+    inputFile.open(argv[1]);
+    outputFile.open(argv[3]);
     string line;
     map<string,int> link;
     vector<list<string>> database;
-	if(!inputFile.is_open())
+    if(!inputFile.is_open())
     {
             exit(EXIT_FAILURE);
     
     }
+    int no_of_orders = 0;
     while(inputFile>>line){  
+    	no_of_orders++;
         set<string> uniqueItem; 
         char *token = strtok(const_cast<char*>(line.c_str()), ";"); 
         list<string> item;
@@ -101,6 +104,8 @@ int main(){
                 link[*it]= 1;
         }
     } 
+    int support = ceil(x* no_of_orders);
+    //cout<<support;
     int count = 0;
     for(auto i = link.cbegin(); i!= link.cend();){
         if(i->second<support){
@@ -114,7 +119,7 @@ int main(){
         //queue<string> seq;
 	string seq = i->first;
         //seq.push(i->first);
-        frequent_sequence(database,link,i->first,support,seq,0);
+        frequent_sequence(database,link,i->first,support,seq,0,outputFile);
     }
     //cout<<count;
 }
