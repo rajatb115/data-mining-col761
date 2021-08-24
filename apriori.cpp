@@ -1,5 +1,5 @@
+#include <bits/stdc++.h>
 #include <iostream>
-#include<bits/stdc++.h>
 #include <vector>
 #include <string.h>
 #include <set>
@@ -42,6 +42,7 @@ ll freq_set_size;
     return count;
 }*/
 
+
 //Frequency in a map generator function generating map of frequency of item.
 pair<map <ll,ll>,ll> frequency()
 {
@@ -72,6 +73,25 @@ pair<map <ll,ll>,ll> frequency()
 }
 
 
+//Vector sort function
+bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
+{
+	ll sizea = a.size();
+	ll sizeb = b.size();
+	ll size_min = min(sizea,sizeb);
+	for(ll i=0;i<size_min;i++)
+	{
+		if(a[i] < b[i])
+		{
+			return true;
+		}
+		if( a[i] > b[i])
+		{
+			return false;
+		}
+	}
+	return sizea < sizeb ;
+}
 
 // Checks if itemset i and itemset j can be combined
 bool check_combine(vector <ll> v1,vector <ll> v2)
@@ -277,7 +297,7 @@ int main(int argc, char ** argv)
 		next_set.clear();
 	}
    	
-	
+	sort(frequent_set.begin(),frequent_set.end(),sortbyvec);
 	for(ll i=0;i<frequent_set.size();i++)
 	{
 		for(ll j=0;j<frequent_set[i].size();j++)
