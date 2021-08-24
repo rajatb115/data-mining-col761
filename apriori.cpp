@@ -297,7 +297,7 @@ int main(int argc, char ** argv)
 		next_set.clear();
 	}
    	
-	sort(frequent_set.begin(),frequent_set.end(),sortbyvec);
+	//sort(frequent_set.begin(),frequent_set.end(),sortbyvec);
 	for(ll i=0;i<frequent_set.size();i++)
 	{
 		for(ll j=0;j<frequent_set[i].size();j++)
