@@ -23,25 +23,8 @@ vector<ll> count_subsets;
 ll freq_set_size;
 
 
-// Returns number of transactions in a dataset.
-/*ll transaction_count()
-{
-	ll count = 0;
-	FILE * fp;
-	char * line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	fp = fopen(dataset_path, "r");
-	while ((read = getline(&line, &len, fp)) != -1) 
-	{
-		count++;
-    }
-    fclose(fp);
-    if (line)
-        free(line);
-    return count;
-}*/
-
+// c++ is taking 14 sec to read the file once
+// python is taking 20 sec to read the file once
 
 //Frequency in a map generator function generating map of frequency of item.
 pair<map <ll,ll>,ll> frequency()
@@ -94,17 +77,21 @@ bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
 }
 
 // Checks if itemset i and itemset j can be combined
-bool check_combine(vector <ll> v1,vector <ll> v2)
+int check_combine(vector <ll> v1,vector <ll> v2)
 {
 	ll size= v1.size();
 	for(ll i=0;i<size-1;i++)
 	{
 		if(v1[i]!=v2[i])
 		{
-			return false;
+            if(v1[i]<v2[i])
+                return -1;
+            else
+                return 0;
+			
 		}
 	}
-	return true;
+	return 1;
 }
 
 // generates a (k-1) subset of vector v1 of size k removing element at position pos1
@@ -139,45 +126,65 @@ bool check_if_exists(vector<ll>v1)
 //Generates candidates
 void generate_candidates()
 {
+    // cleaning the candidate_set
 	candidate_set.clear();
+    
 	ll size = prev_set.size();
 	freq_set_size = prev_set[0].size();
-	for(ll i=0;i<size;i++)
-	{
-		for(ll j=i+1;j<size;j++)
-		{
-			if(!check_combine(prev_set[i],prev_set[j]))
-			{
-				continue;
-			}
-            
-			bool allowed_candidate = true;
-			vector<ll> v_store = prev_set[i];
-			v_store.push_back(prev_set[j][freq_set_size-1]);
+    
+    
+    if(freq_set_size == 1){
+        // if the freq_set_size length is 1
+        for(ll i=0;i<size;i++)
+            for(ll j=i+1, j<size; j++){
+                candidate_set.push_back([min(prev_set[i],prev_set[j]),max(prev_set[i],prev_set[j])]);
+            }
+    }else{
+        // if the freq_set_size length is > 1
+        for(ll i=0;i<size;i++)
+        {
+            for(ll j=i+1;j<size;j++)
+            {   
+                // Check if we can concatinate the two sets 
+                // Concatination is only possible if set_size-1 elements in both the sets are maching.
+                //  {1,5,7},{1,6,20} => for this condition we can break the inner "for" loop as no other merging is possible
 
-			for(ll k=0;k<=freq_set_size;k++)
-			{
-				if(freq_set_size==1)
-				{
-					break;
-				}
-				
-                vector<ll> store_res = subset_gen(v_store,k);
-				if(!check_if_exists(store_res))
-				{
-					allowed_candidate = false;
-					break;
-				}
-                
-			}
+                int tmp_res = check_combine(prev_set[i],prev_set[j])
 
-			if(allowed_candidate)
-			{
-				candidate_set.push_back(v_store);
-			}
-            
-		}
-	}
+                if(tmp_res == -1)
+                {
+                    continue;
+                }
+
+                if(tmp_res == 0){
+                    break;
+                }
+
+                bool allowed_candidate = true;
+                vector<ll> v_store = prev_set[i];
+                v_store.push_back(prev_set[j][freq_set_size-1]);
+
+                for(ll k=0;k<=freq_set_size;k++)
+                {
+
+                    vector<ll> store_res = subset_gen(v_store,k);
+                    if(!check_if_exists(store_res))
+                    {
+                        allowed_candidate = false;
+                        break;
+                    }
+
+                }
+
+                if(allowed_candidate)
+                {
+                    candidate_set.push_back(v_store);
+                }
+
+            }
+        }
+        
+    }
 }
 
 //Now we write functions for filtering the candidate set
@@ -271,12 +278,15 @@ int main(int argc, char ** argv)
     
 	dataset_path = argv[1];
 	pair<map<ll,ll>,ll> item_freq_count= frequency();
-   	 map<ll,ll> item_freq = item_freq_count.first;
+   	map<ll,ll> item_freq = item_freq_count.first;
+    ll no_of_orders = item_freq_count.second;
     
 	freopen(argv[3], "w", stdout);
+    
+    // Finding the threshold (taking ceil)
 	float x = atof(argv[2])*0.01;
-	ll no_of_orders = item_freq_count.second;
 	ll threshold = ceil(x* no_of_orders);
+    
     
     map <ll,ll>::iterator it;
 	for(it= item_freq.begin(); it!= item_freq.end(); it++){
@@ -284,7 +294,8 @@ int main(int argc, char ** argv)
 		{
 			vector<ll> v1;
 			v1.push_back(it->first);
-			frequent_set.push_back(v1);
+			//frequent_set.push_back(v1);
+            cout<<it->first<<"\n";
 			prev_set.push_back(v1);
 		}
 	}
@@ -297,15 +308,17 @@ int main(int argc, char ** argv)
 		next_set.clear();
 	}
    	
+    
 	//sort(frequent_set.begin(),frequent_set.end(),sortbyvec);
-	for(ll i=0;i<frequent_set.size();i++)
+	/*
+    for(ll i=0;i<frequent_set.size();i++)
 	{
 		for(ll j=0;j<frequent_set[i].size();j++)
 		{	
  			cout<< frequent_set[i][j]<<" ";  
 		}
 		cout<<"\n";
-	}
+	}*/
     
 	return 0;
 }
