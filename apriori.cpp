@@ -23,9 +23,6 @@ vector<ll> count_subsets;
 ll freq_set_size;
 
 
-// c++ is taking 14 sec to read the file once
-// python is taking 20 sec to read the file once
-
 //Frequency in a map generator function generating map of frequency of item.
 pair<map <ll,ll>,ll> frequency()
 {
@@ -74,6 +71,25 @@ bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
 		}
 	}
 	return sizea < sizeb ;
+}
+
+bool asciisort(ll a, ll b){
+    string st1 = to_string(a);
+    string st2 = to_string(b);
+    ll i=0;
+    ll j=0;
+    while(i<st1.length() && j<st2.length()){
+        if(st1[i]<st1[j])
+            return true;
+        if(st1[i]>st2[j])
+            return false;
+        i++;
+        j++;
+    }
+    if(i==st1.length()){
+        return true;
+    }
+    return false;
 }
 
 // Checks if itemset i and itemset j can be combined
@@ -225,7 +241,7 @@ bool is_subset(vector<ll>v1,vector<ll>v2)
 }
 
 //Counts no of orders which are supersets for each candidate set
-void count_total_subsets(int threshold)
+void count_total_subsets(ll threshold,no_of_orders)
 {
 	int count = 0;
 	FILE * fp;
@@ -238,8 +254,12 @@ void count_total_subsets(int threshold)
     // tmp toggle when itemset count reached to certain threshold
     // bool tmp = false;
     
+    ll line_cnt = 0;
+    
 	while ((read = getline(&line, &len, fp)) != -1 ) 
 	{
+        line_cnt++;
+        
 		vector<ll> v_store;
 		char *ptr = strtok(line, " ");
 		while(ptr!=NULL)
@@ -257,8 +277,8 @@ void count_total_subsets(int threshold)
             
             
             // we can track count_subset and check that we need to skip it or not
-            // will be helpful when the threshold is low. -> need to implement
-            if(count_subsets[i]<threshold)
+            // will be helpful when the threshold is low.
+            if(count_subsets[i]<threshold && no_of_orders-line_cnt+1 >= threshold-count_subsets[i])
             {
 				if(is_subset(candidate_set[i],v_store))
 				{
@@ -282,7 +302,7 @@ void count_total_subsets(int threshold)
 }
 
 //Filters the sets for required frequency threshold
-void filter_set(int threshold)
+void filter_set(ll threshold, ll no_of_orders)
 {
 	ll size= candidate_set.size();
     
@@ -294,14 +314,21 @@ void filter_set(int threshold)
 		count_subsets.push_back(0);
 	}
     
-	count_total_subsets(threshold);
+	count_total_subsets(threshold,no_of_orders);
     
 	for(ll i=0;i<size;i++)
 	{
 		if(count_subsets[i]>=threshold)
 		{
 			next_set.push_back(candidate_set[i]);
-			frequent_set.push_back(candidate_set[i]);
+            
+            vector<ll>tmp = candidate_set[i];
+            sort(tmp.begin(),tmp.end(),asciisort);
+            
+            for(ll k=0;k<tmp.size();k++)
+                cout<<tmp[k]<<" ";
+            cout<<"\n";
+			//frequent_set.push_back(candidate_set[i]);
 		}
 	}
     
@@ -339,7 +366,7 @@ int main(int argc, char ** argv)
 	while(prev_set.size()>0)
 	{
 		generate_candidates();
-		filter_set(threshold);
+		filter_set(threshold,no_of_orders);
 		prev_set = next_set;
 		next_set.clear();
 	}
