@@ -192,9 +192,15 @@ void generate_candidates()
 //Finds if v1 is a subset of v2.
 bool is_subset(vector<ll>v1,vector<ll>v2)
 {
-	ll pos1=0,pos2=0;
-	ll size1= v1.size();
+    ll size1= v1.size();
 	ll size2 = v2.size();
+    // If the length of candidate set is greater than the set then return false
+    if(size1>size2)
+        return false;
+    
+	ll pos1=0,pos2=0;
+	
+    
 	while (pos1<size1 && pos2<size2)
 	{
 		if(v1[pos1]== v2[pos2])
@@ -202,11 +208,19 @@ bool is_subset(vector<ll>v1,vector<ll>v2)
 			pos1++;
 		}
 		pos2++;
+        
+        if(pos1==size1)
+	   {
+		  return true;
+	   }
+        
 	}
-	if(pos1==size1)
-	{
-		return true;
-	}
+    
+	//if(pos1==size1)
+	//{
+	//	return true;
+	//}
+    
 	return false; 
 }
 
@@ -235,9 +249,15 @@ void count_total_subsets(int threshold)
 			ptr = strtok(NULL, " ");
 		}
         
+        // Removing extra unwanted reading of data using tmp_cnt.
+        ll tmp_cnt = 0;
+        
 		for(ll i=0;i<size;i++)
-		{
+		{ 
             
+            
+            // we can track count_subset and check that we need to skip it or not
+            // will be helpful when the threshold is low. -> need to implement
             if(count_subsets[i]<threshold)
             {
 				if(is_subset(candidate_set[i],v_store))
@@ -245,9 +265,19 @@ void count_total_subsets(int threshold)
 					count_subsets[i]++;
 				}
           
-			}
+			}else{
+                tmp_cnt++;
+            }
+            
 		}
+        
+        if(tmp_cnt == size){
+            break;
+        }
+        
     }
+    
+    fclose(fp);
     
 }
 
@@ -255,12 +285,17 @@ void count_total_subsets(int threshold)
 void filter_set(int threshold)
 {
 	ll size= candidate_set.size();
+    
+    // cleaning the count_subsets
 	count_subsets.clear();
+    
 	for(ll i=0;i<size;i++)
 	{
 		count_subsets.push_back(0);
 	}
+    
 	count_total_subsets(threshold);
+    
 	for(ll i=0;i<size;i++)
 	{
 		if(count_subsets[i]>=threshold)
@@ -269,6 +304,7 @@ void filter_set(int threshold)
 			frequent_set.push_back(candidate_set[i]);
 		}
 	}
+    
 }
 
 
