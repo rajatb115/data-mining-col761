@@ -54,6 +54,7 @@ pair<map <ll,ll>,ll> frequency()
 
 
 //Vector sort function
+/*
 bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
 {
 	ll sizea = a.size();
@@ -71,15 +72,18 @@ bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
 		}
 	}
 	return sizea < sizeb ;
-}
+} */
 
 bool asciisort(ll a, ll b){
-    string st1 = to_string(a);
-    string st2 = to_string(b);
+    ostringstream strg,strg1;
+    strg<< a;
+    string st1 = strg.str();
+    strg1<<b;
+    string st2 = strg1.str();
     ll i=0;
     ll j=0;
     while(i<st1.length() && j<st2.length()){
-        if(st1[i]<st1[j])
+        if(st1[i]<st2[j])
             return true;
         if(st1[i]>st2[j])
             return false;
@@ -90,6 +94,7 @@ bool asciisort(ll a, ll b){
         return true;
     }
     return false;
+
 }
 
 // Checks if itemset i and itemset j can be combined
