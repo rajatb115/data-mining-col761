@@ -152,8 +152,12 @@ void generate_candidates()
     if(freq_set_size == 1){
         // if the freq_set_size length is 1
         for(ll i=0;i<size;i++)
-            for(ll j=i+1, j<size; j++){
-                candidate_set.push_back([min(prev_set[i],prev_set[j]),max(prev_set[i],prev_set[j])]);
+            for(ll j=i+1; j<size; j++){
+                vector<ll> v_store ;
+                v_store.push_back(min(prev_set[i][0],prev_set[j][0]));
+                v_store.push_back(max(prev_set[i][0],prev_set[j][0]));
+                
+                candidate_set.push_back(v_store);
             }
     }else{
         // if the freq_set_size length is > 1
@@ -165,7 +169,7 @@ void generate_candidates()
                 // Concatination is only possible if set_size-1 elements in both the sets are maching.
                 //  {1,5,7},{1,6,20} => for this condition we can break the inner "for" loop as no other merging is possible
 
-                int tmp_res = check_combine(prev_set[i],prev_set[j])
+                int tmp_res = check_combine(prev_set[i],prev_set[j]);
 
                 if(tmp_res == -1)
                 {
@@ -241,7 +245,7 @@ bool is_subset(vector<ll>v1,vector<ll>v2)
 }
 
 //Counts no of orders which are supersets for each candidate set
-void count_total_subsets(ll threshold,no_of_orders)
+void count_total_subsets(ll threshold,ll no_of_orders)
 {
 	int count = 0;
 	FILE * fp;
