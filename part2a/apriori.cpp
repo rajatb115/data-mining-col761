@@ -53,26 +53,6 @@ pair<map <ll,ll>,ll> frequency()
 }
 
 
-//Vector sort function
-/*
-bool sortbyvec(const vector <ll> &a,const vector <ll> &b)
-{
-	ll sizea = a.size();
-	ll sizeb = b.size();
-	ll size_min = min(sizea,sizeb);
-	for(ll i=0;i<size_min;i++)
-	{
-		if(a[i] < b[i])
-		{
-			return true;
-		}
-		if( a[i] > b[i])
-		{
-			return false;
-		}
-	}
-	return sizea < sizeb ;
-} */
 
 bool asciisort(ll a, ll b){
     ostringstream strg,strg1;
@@ -213,7 +193,6 @@ void generate_candidates()
 }
 
 //Now we write functions for filtering the candidate set
-
 //Finds if v1 is a subset of v2.
 bool is_subset(vector<ll>v1,vector<ll>v2)
 {
@@ -241,11 +220,6 @@ bool is_subset(vector<ll>v1,vector<ll>v2)
         
 	}
     
-	//if(pos1==size1)
-	//{
-	//	return true;
-	//}
-    
 	return false; 
 }
 
@@ -259,9 +233,6 @@ void count_total_subsets(ll threshold,ll no_of_orders)
 	ssize_t read;
 	fp = fopen(dataset_path, "r");
 	ll size = candidate_set.size();
-    
-    // tmp toggle when itemset count reached to certain threshold
-    // bool tmp = false;
     
     ll line_cnt = 0;
     
@@ -337,7 +308,6 @@ void filter_set(ll threshold, ll no_of_orders)
             for(ll k=0;k<tmp.size();k++)
                 cout<<tmp[k]<<" ";
             cout<<"\n";
-			//frequent_set.push_back(candidate_set[i]);
 		}
 	}
     
@@ -379,18 +349,6 @@ int main(int argc, char ** argv)
 		prev_set = next_set;
 		next_set.clear();
 	}
-   	
-    
-	//sort(frequent_set.begin(),frequent_set.end(),sortbyvec);
-	/*
-    for(ll i=0;i<frequent_set.size();i++)
-	{
-		for(ll j=0;j<frequent_set[i].size();j++)
-		{	
- 			cout<< frequent_set[i][j]<<" ";  
-		}
-		cout<<"\n";
-	}*/
     
 	return 0;
 }
