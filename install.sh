@@ -10,5 +10,10 @@ cd "$folder"
 file="CSZ208507-Assgn1.zip"
 unzip "$file"
 
-# load relevent version of compilers
+# loading relevent version of compilers
 module load compiler/gcc/7.1.0/compilervars
+module load compiler/python/3.6.0/ucs4/gnu/447
+
+# loading relevent libraries
+module load pythonpackages/3.6.0/numpy/1.16.1/gnu
+module load pythonpackages/3.6.0/matplotlib/3.0.2/gnu
