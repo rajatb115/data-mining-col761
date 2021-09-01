@@ -6,12 +6,18 @@ if [ "$#" -eq 4 ]
 then
 	if [ "$1" == "-apriori" ]
 	then
-		./part2a/apriori "$2" "$3" "$4"
+		cd ./part2a
+		./apriori "$2" "$3" "$4.txt"
+		mv "$4.txt" ./..
+		cd ..
 	fi
 	
 	if [ "$1" == "-prefixspan" ]
 	then
-		./part3/prefixSpan "$2" "$3" "$4"
+		cd ./part3
+		./prefixSpan "$2" "$3" "$4.txt"
+		mv "$4.txt" ./..
+		cd ..
 	fi
 fi
 
