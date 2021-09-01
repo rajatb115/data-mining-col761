@@ -15,7 +15,7 @@ then
 	fi
 fi
 
-if [ "$#" -eq 3 ]
+if [ "$#" -eq 2 ]
 then
 	if [ "$2" == "-plot" ]
 	then
