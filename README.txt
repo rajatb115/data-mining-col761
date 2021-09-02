@@ -40,7 +40,11 @@ Part B) Performance comparison between Apriori and FP-tree implementation:
 
 
 
-3) Prefix Span Implementation: 
+Question 3:
+
+Prefix Span Implementation: 
+
+File: prefixSpan.cpp
 
 It is a Depth First technique for sequential pattern mining. The program first extracts all the items present in the input file, containing itemset sequences, and store them lexicographically in a map along with its occurence. At the same time, store the sequence as list of string. 
 The second step is pruning. Prune all the items which have occurence less than the minimum support required. For all the frequent items, we will create projected database and find the frequent subsequqnce of size i+1, using Depth First approach via recursion. 
@@ -58,5 +62,21 @@ First create new projected database from the current projected database for the 
 Print the frequent subsequence in the output file.
 Append the pruned items in the frequent subsequence and call the recursive function for all items appended.
 
+The output file does not contain an extra empty line after printing the last sequence.
 
+File: path.txt
+
+It contains the raw data taken from the site
+
+File: paths_finished.dat
+
+It contains the pre-preocessed data where items are seperated by ';'
+
+File: UpdatedFile.cpp
+
+Pre-process the file path.txt and store the data in file paths_finished.txt
+
+File: frequent_path.txt
+
+It stores the output of prefixSpan applied on sequences in paths_finished.txt with support of 1%.
 
