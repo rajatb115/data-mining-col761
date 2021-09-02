@@ -15,13 +15,17 @@ compile.sh - This script is used to generate the executable (binary) files to th
 
 CSZ208507.sh - This scrip is used to run various implemented algorithms ( Apriori, Fp-tree and PrefixSpan ) and generate their output.
 	
-To run Apriori Algorithm and generate frequent itemsets we will use the following command where X is the minimum support threshold, webdocs.dat is a dataset and <filename> is the name of the output file. It will create "filename.txt" as output file and save the frequent itemsets in it.
-		./CSZ208507.sh -apriori webdocs.dat X <filename>
+To run Apriori Algorithm and generate frequent itemsets we will use the following command where X is the minimum support threshold, input_dataset is a dataset on which we are running the algorithm and <filename> is the name of the output file. It will create "filename.txt" as output file and save the frequent itemsets in it.
+		
+		./CSZ208507.sh -apriori <input_dataset> X <filename>
 
-To comparison between Apriori and FP-tree implementation and plot graph for the comparison we will use the following command where webdocs.dat is a dataset. It will create "plot.png" as output file and save it inside output folder.
-		./CSZ208507.sh webdocs.dat -plot
+To compare performance between Apriori and FP-tree implementation and plot graph for the comparison we will use the following command where input_dataset is the dataset on which we are running the algorithm. This script will run the Apriori and FP-tree algorithms on various minimum support threshold on the given dataset and create "plot.png" as output file and save it inside output folder.
+		
+		./CSZ208507.sh <input_dataset> -plot
 
+To run PrefixSpan Algorithm and generate frequent itemsets we will use the following command where X is the minimum support threshold, input_dataset is a dataset on which we are running the algorithm and <filename> is the name of the output file.It will create "filename.txt" as output file and save the frequent itemsets in it.
 
+		./CSZ208507.sh -prefixspan <input_dataset> X <filename>
 
 
 Question 2:
