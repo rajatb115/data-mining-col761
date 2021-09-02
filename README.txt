@@ -74,9 +74,9 @@ It contains the pre-preocessed data where items are seperated by ';'
 
 File: UpdatedFile.cpp
 
-Pre-process the file path.txt and store the data in file paths_finished.txt
+Pre-process the file path.txt and store the data in file paths_finished.dat
 
 File: frequent_path.txt
 
-It stores the output of prefixSpan applied on sequences in paths_finished.txt with support of 1%.
+It stores the output of prefixSpan applied on sequences in paths_finished.dat with support of 1%.
 
