@@ -35,11 +35,10 @@ Part A) Apriori implementation:
 The file apriori.cpp contains an implementation of the apriori algorithm wherein we initially generate a set of frequent items and
 then until the candidate set is empty we keep generating frequent itemsets of size 1 greater as we do in apriori and filter to obtain frequent itemsets. 
 
+
 Part B) Performance comparison between Apriori and FP-tree implementation:
 
-In this part we are comparing the running performance of Apriori algorithm vs FP-tree algorithm. 
-
-
+In this part we are comparing the running time of Apriori algorithm with running time of FP-tree algorithm. We have used plot.py script to run Apriori and FP-tree algorithm on various minimum support threshold and plot a graph showing the running time of both the algorithms on those thresholds. The plot of the graph will be saved in "output" folder with the name of "plot.png". After running the script we can conclude that with the decrease in the minimum threshold support the time taken by Apriori algorithm is increasing exponentially. Even for 5% and 10% threshold it is taking more than 8 hrs to generate the result for the given test dataset(webdocs.dat). On the other hand FP-tree algorithm takes far less time as compared to Apriori algorithm, thus we are able to run FP-tree algorithm even for 5% and 10% threshold for the given dataset under 5 mins.
 
 
 Question 3:
