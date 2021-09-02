@@ -75,6 +75,7 @@ It contains the pre-preocessed data where items are seperated by ';'
 File: UpdatedFile.cpp
 
 Pre-process the file path.txt and store the data in file paths_finished.dat
+It reads path.txt line by line, process the line by spliting on ";". If it encounters anything except "<", it pushes it into the stack, else it pops the top entry on stack and replaces the current "<" by the current top element in the stack and continue similarly with the rest of the items in that sequence.
 
 File: frequent_path.txt
 
