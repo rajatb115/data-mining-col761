@@ -19,7 +19,7 @@ To run Apriori Algorithm and generate frequent itemsets we will use the followin
 		
 		./CSZ208507.sh -apriori <input_dataset> X <filename>
 
-To compare performance between Apriori and FP-tree implementation and plot graph for the comparison we will use the following command where input_dataset is the dataset on which we are running the algorithm. This script will run the Apriori and FP-tree algorithms on various minimum support threshold on the given dataset and create "plot.png" as output file and save it inside output folder.
+To compare performance between Apriori and FP-tree implementation and plot graph for the comparison we will use the following command where input_dataset is the dataset on which we are running the algorithm. This script will run the Apriori and FP-tree algorithms on various minimum support threshold on the given dataset and create "plot.png" as output file and save it inside "output" folder.
 		
 		./CSZ208507.sh <input_dataset> -plot
 
@@ -36,7 +36,7 @@ The file apriori.cpp contains an implementation of the apriori algorithm wherein
 then until the candidate set is empty we keep generating frequent itemsets of size 1 greater as we do in apriori and filter to obtain frequent itemsets. 
 
 Part B) Performance comparison between Apriori and FP-tree implementation:
-
+In this part we are comparing the running time of 
 
 
 
