@@ -3,7 +3,7 @@
 # Contributers
 
 Rajat Singh - 2020CSZ8507
-Chhavi Agarwal - 
+Chhavi Agarwal - 2020CSY7654
 Shreyans J Nagori -
 
 
@@ -36,11 +36,17 @@ The file apriori.cpp contains an implementation of the apriori algorithm wherein
 then until the candidate set is empty we keep generating frequent itemsets of size 1 greater as we do in apriori and filter to obtain frequent itemsets. 
 
 Part B) Performance comparison between Apriori and FP-tree implementation:
-In this part we are comparing the running time of 
+
+In this part we are comparing the running performance of Apriori algorithm vs FP-tree algorithm. 
 
 
 
-3) Prefix Span Implementation: 
+
+Question 3:
+
+Prefix Span Implementation: 
+
+File: prefixSpan.cpp
 
 It is a Depth First technique for sequential pattern mining. The program first extracts all the items present in the input file, containing itemset sequences, and store them lexicographically in a map along with its occurence. At the same time, store the sequence as list of string. 
 The second step is pruning. Prune all the items which have occurence less than the minimum support required. For all the frequent items, we will create projected database and find the frequent subsequqnce of size i+1, using Depth First approach via recursion. 
@@ -58,5 +64,22 @@ First create new projected database from the current projected database for the 
 Print the frequent subsequence in the output file.
 Append the pruned items in the frequent subsequence and call the recursive function for all items appended.
 
+The output file does not contain an extra empty line after printing the last sequence.
 
+File: path.txt
+
+It contains the raw data taken from the site
+
+File: paths_finished.dat
+
+It contains the pre-preocessed data where items are seperated by ';'
+
+File: UpdatedFile.cpp
+
+Pre-process the file path.txt and store the data in file paths_finished.dat
+It reads path.txt line by line, process the line by spliting on ";". If it encounters anything except "<", it pushes it into the stack, else it pops the top entry on stack and replaces the current "<" by the current top element in the stack and continue similarly with the rest of the items in that sequence.
+
+File: frequent_path.txt
+
+It stores the output of prefixSpan applied on sequences in paths_finished.dat with support of 1%.
 
