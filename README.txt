@@ -37,6 +37,7 @@ then until the candidate set is empty we keep generating frequent itemsets of si
 
 Part B) Performance comparison between Apriori and FP-tree implementation:
 
+In this part we are comparing the running performance of Apriori algorithm vs FP-tree algorithm. 
 
 
 
