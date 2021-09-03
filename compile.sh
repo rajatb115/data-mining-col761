@@ -9,4 +9,9 @@ cd part2b/fpgrowth/fpgrowth/src/
 make all
 cd ../../../../
 
-
+chmod 777 compile.sh
+chmod 777 install.sh
+chmod 777 CSZ208507.sh
+chmod 777 part2a/apriori
+chmod 777 part3/prefixSpan
+chmod 777 part2b/fpgrowth/fpgrowth/src/fpgrowth
