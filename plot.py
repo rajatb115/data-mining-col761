@@ -5,7 +5,7 @@ import sys
 import os
 
 # Thresholds in %
-threshold = [90,70,60,50,30,25,10]
+threshold = [90,70,60,50,25]
 threshold2 = [90,70,60,50,25]
 
 # Start time for each Threshold
