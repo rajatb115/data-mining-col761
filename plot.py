@@ -6,7 +6,7 @@ import os
 
 # Thresholds in %
 threshold = [90,70,60,50,25]
-threshold2 = [90,70,60,50,25]
+threshold2 = [90,60,50,25]
 
 # Start time for each Threshold
 start_time_apriori = []
