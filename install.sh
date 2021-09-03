@@ -4,7 +4,7 @@
 repo="https://github.com/rajatb115/data-mining-col761.git"
 git clone "$repo"
 
-folder="data-miningcol761"
+folder="data-mining-col761"
 cd "$folder"
 
 file="CSZ208507-Assgn1.zip"
