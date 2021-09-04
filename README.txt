@@ -40,6 +40,12 @@ Part B) Performance comparison between Apriori and FP-tree implementation:
 
 In this part we are comparing the running time of Apriori algorithm with running time of FP-tree algorithm. We have used plot.py script to run Apriori and FP-tree algorithm on various minimum support threshold and plot a graph showing the running time of both the algorithms on those thresholds. The plot of the graph will be saved in "output" folder with the name of "plot.png". After running the script we can conclude that with the decrease in the minimum threshold support the time taken by Apriori algorithm is increasing exponentially. Even for 5% and 10% threshold it is taking more than 8 hrs to generate the result for the given test dataset(webdocs.dat). On the other hand FP-tree algorithm takes far less time as compared to Apriori algorithm, thus we are able to run FP-tree algorithm even for 5% and 10% threshold for the given dataset under 5 mins.
 
+The reason for getting this trend as shown in the graph is as follows:
+- Apriori algorithm is an array based algorithm and it use Join and Prune technique to generate the candidates but FP-growth is a tree based algorithm which constructs conditional frequent pattern tree and conditional pattern base from database which satisfy minimum support.
+- Since there are large amount of candidate generation occurred in Apriori algorithm thus it take huge amount of space on the other hand FP-tree require less amount of space due to compact structure and there is no candidate generation in case of FP-growth.
+- While generating candidate set Apriori algorithm have to scan the dataset(database) a lot of times but FP-growth scans the dataset(database) only twice which increase the speed of FP-growth.
+- In Apriori algorithm at each step we are generating candidates that will increase exponentially at each step thus make it very slow.
+
 
 Question 3:
 
