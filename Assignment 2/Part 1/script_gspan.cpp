@@ -6,7 +6,8 @@ int main(int argc, char **argv)
 	string graph_id;
 	int tid = 0,vertice,edge;
 	int vert1,vert2,labele;
-	char ch,label;
+	char ch;
+	string label;
 	freopen(argv[1], "r", stdin);
 	freopen(argv[2], "w", stdout);
 	while(cin>>graph_id)
