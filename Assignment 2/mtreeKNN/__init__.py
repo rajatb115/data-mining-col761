@@ -1,5 +1,5 @@
 from collections import namedtuple
-from . import functions
+import functions
 from heap_queue import HeapQueue
 
 
@@ -152,8 +152,6 @@ class _LeafNodeTrait(_Node):
 	
 	def do_add_data(self, data, distance, mtree):
 		entry = _Entry(data)
-		print("data " ,data)
-		print("child ",self.children)
 		assert data not in self.children
 		self.children[data] = entry
 		assert data in self.children
