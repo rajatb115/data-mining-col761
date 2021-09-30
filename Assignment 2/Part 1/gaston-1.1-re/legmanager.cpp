@@ -11,6 +11,7 @@
 //
 #include "legmanager.h"
 #include "graphstate.h"
+#include <algorithm>
 
 LegManager legmanager;
 

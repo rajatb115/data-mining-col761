@@ -8,7 +8,7 @@
 #include "graphstate.h"
 #include "simplesubiso.h"
 #include <time.h>
-
+#include <unistd.h>
 using namespace std;
 
 Frequency minfreq = 1;

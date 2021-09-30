@@ -4,7 +4,7 @@
 #include "graphstate.h"
 #include "legmanager.h"
 #include <queue>
-
+#include <cstring>
 PATMASKTYPE mask[MAXPATSIZE]; 
   // for the moment restricted to patterns with maximum size 32
 
