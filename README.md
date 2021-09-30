@@ -10,9 +10,9 @@ Shreyans J Nagori - 2018CS10390
 Implementation :
 
 gSpan:
-./gSpan-64 -f <input file> -s <.95>
+./gSpan-64 -f < input file > -s <.95>
 
 FSG :
-./fsg -s 95 <input file>
+./fsg -s 95 < input file >
 
 
