@@ -1,4 +1,4 @@
-# Data Mining (COL761) - Homework 1
+# Data Mining (COL761) - Homework 2
 
 # Contributers
 
@@ -8,3 +8,11 @@ Shreyans J Nagori - 2018CS10390
 
 
 Implementation :
+
+gSpan:
+./gSpan-64 -f <input file> -s <.95>
+
+FSG :
+./fsg -s 95 <input file>
+
+
