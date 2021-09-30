@@ -27,8 +27,6 @@ int main(int argc, char **argv)
 			cin>>vert1>>vert2>>labele;
 			cout<<"u "<<vert1<<" "<<vert2<<" "<<labele<<endl;
 		}
-		scanf("%c",&label);
-
 	}
 	return 0;
 }
