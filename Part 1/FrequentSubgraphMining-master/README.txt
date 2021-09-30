@@ -1,4 +1,20 @@
+To install:
+pip install .
+To run:
+python3 bin/gaston 95 db
 
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------
 Gaston Graph Mining with Python
 This is a python implementation of the Gaston graph mining algorithm.
 
