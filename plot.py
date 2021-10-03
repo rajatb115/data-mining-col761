@@ -19,7 +19,7 @@ end_time_fsg = []
 
 # Preprocessing of the data file for FSG
 print("Processing the file for FSG")
-print("./Q1/FSG/script_fsg",sys.argv[1],"data_file.txt")
+print("./Q1/FSG/script_fsg",str(sys.argv[1]),"/Q1/FSG/data_file.txt")
 subprocess.run(["./Q1/FSG/script_fsg",sys.argv[1],"/Q1/FSG/data_file.txt"])
 print("Processing of the file completed")
 
@@ -39,7 +39,7 @@ for i in threshold2:
 time_fsg=[]
 
 for i in range(len(threshold)):
-	time_fsg.append(end_time_fsg[i] - start_time_sfg[i])
+	time_fsg.append(end_time_fsg[i] - start_time_fsg[i])
 
 
 plt.plot(threshold,time_fsg,'-r',label = 'FSG')
