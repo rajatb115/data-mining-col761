@@ -38,7 +38,7 @@ for i in threshold2:
 '''
 time_fsg=[]
 
-for i in range(len(threshold2)):
+for i in range(len(threshold)):
 	time_fsg.append(end_time_fsg[i] - start_time_sfg[i])
 
 
