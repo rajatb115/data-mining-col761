@@ -5,6 +5,8 @@ int main(int argc, char **argv)
 {
 	string graph_id;
 	int tid = 0,vertice,edge;
+	map<string,int> label_edge;
+	int label_count = 1;
 	int vert1,vert2,labele;
 	char ch;
 	string label;
@@ -19,7 +21,13 @@ int main(int argc, char **argv)
 		for(int i=0;i<vertice;i++)
 		{
 			cin>>label;
-			cout<<"v "<<i<<" "<<label<<endl;
+			if(label_edge[label]==0)
+			{
+
+				label_edge[label] = label_count;
+				label_count ++;
+			}
+			cout<<"v "<<i<<" "<<label_edge[label]-1<<endl;
 		}
 		cin>>edge;
 		while(edge--)
