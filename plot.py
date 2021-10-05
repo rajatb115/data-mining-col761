@@ -52,7 +52,7 @@ time_gaston=[]
 for i in range(len(threshold)):
         time_gaston.append(end_time_gaston[i] - start_time_gaston[i])
 
-plt.plot(threshold,time_fsg,'-r',label = 'FSG')
+plt.plot(threshold,time_fsg,'-g',label = 'FSG')
 plt.plot(threshold,time_gaston,'-r',label = 'Gaston')
 
 plt.xlabel('Support threshold %')
