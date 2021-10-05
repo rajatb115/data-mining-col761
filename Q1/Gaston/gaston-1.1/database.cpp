@@ -26,10 +26,9 @@ ostream &operator<< ( ostream &stream, DatabaseTree &databasetree ) {
 }
 
 
-void Database::read ( FILE *input ) {
+int Database::read ( FILE *input ) {
   Tid tid;
-  Tid tid2 = 0;
-  largestnedges = largestnnodes = 0;
+  Tid tid2 = 0; 
 
   char array[100];
   fgets ( array, 100, input );
@@ -39,6 +38,7 @@ void Database::read ( FILE *input ) {
     fgets ( array, 100, input );
     tid2++;
   }
+  return tid2;
 }
 
 int readint ( FILE *input ) {
@@ -86,7 +86,6 @@ void Database::readTree ( FILE *input, Tid tid ) {
   while ( command == 'v' ) {
     dummy = readint ( input );
     inputnodelabel = readint ( input );
-//    cout << command << " " << dummy << " " << inputnodelabel << endl;
     if ( dummy != nodessize ) {
       cerr << "Error reading input file - node number does not correspond to its position." << endl;
       exit ( 1 );
@@ -97,26 +96,24 @@ void Database::readTree ( FILE *input, Tid tid ) {
     if ( p.second ) {
       vector_push_back ( DatabaseNodeLabel, nodelabels, nodelabel );
       nodelabel.inputlabel = inputnodelabel;
+      nodelabel.occurrences.parent = NULL;
+      nodelabel.occurrences.number = 1;
       nodelabel.lasttid = tid;
     }
     else {
       DatabaseNodeLabel &nodelabel = nodelabels[p.first->second];
-      if ( nodelabel.lasttid != tid ) {
+      if ( nodelabel.lasttid != tid )
         nodelabel.frequency++;
-        nodelabel.lasttid = tid;
-      }
-      nodelabel.occcount++;
+      nodelabel.lasttid = tid;
     }
-
+    
     vector_push_back ( DatabaseTreeNode, nodes, node );
     node.nodelabel = p.first->second;
-#ifdef INCYCLE    
     node.incycle = false;
-#endif
 
     command = readcommand ( input );
   }
-  
+
   tree->nodes.reserve ( nodessize );
   if ( edges.size () < nodessize )
     edges.resize ( nodessize );
@@ -124,7 +121,7 @@ void Database::readTree ( FILE *input, Tid tid ) {
     edges[i].resize ( 0 );
     tree->nodes.push_back ( nodes[i] );
   }
-
+  
   InputEdgeLabel inputedgelabel;
   InputNodeId nodeid1, nodeid2;
 
@@ -132,7 +129,6 @@ void Database::readTree ( FILE *input, Tid tid ) {
     nodeid1 = readint ( input );
     nodeid2 = readint ( input );
     inputedgelabel = readint ( input );
-//    cout << command << " " << nodeid1 << " " << nodeid2 << " " << inputedgelabel << endl;
     NodeLabel node2label = tree->nodes[nodeid2].nodelabel;
     NodeLabel node1label = tree->nodes[nodeid1].nodelabel;
     CombinedInputLabel combinedinputlabel;
@@ -153,11 +149,9 @@ void Database::readTree ( FILE *input, Tid tid ) {
     }
     else {
       DatabaseEdgeLabel &edgelabel = edgelabels[p.first->second];
-      if ( edgelabel.lasttid != tid ) {
+      if ( edgelabel.lasttid != tid )
         edgelabel.frequency++;
-        edgelabel.lasttid = tid;
-      }
-      edgelabel.occcount++;
+      edgelabel.lasttid = tid;
     }
 
     vector_push_back ( DatabaseTreeEdge, edges[nodeid1], edge );
@@ -167,12 +161,12 @@ void Database::readTree ( FILE *input, Tid tid ) {
     vector_push_back ( DatabaseTreeEdge, edges[nodeid2], edge2 );
     edge2.edgelabel = p.first->second;
     edge2.tonode = nodeid1;
-    
+
     edgessize++;
 
     command = readcommand ( input );
   }
-  
+
   tree->edges = new DatabaseTreeEdge[edgessize * 2];
   int pos = 0;
   for ( int i = 0; i < nodessize; i++ ) {
@@ -183,13 +177,7 @@ void Database::readTree ( FILE *input, Tid tid ) {
       tree->edges[pos] = edges[i][j];
     }
   }
-    
-  if ( nodessize > largestnnodes )
-    largestnnodes = nodessize;
-  if ( edgessize > largestnedges )
-    largestnedges = edgessize;
-
-#ifdef INCYCLE
+  
   static vector<int> nodestack;
   static vector<bool> visited1, visited2;
   nodestack.resize ( 0 );
@@ -206,14 +194,11 @@ void Database::readTree ( FILE *input, Tid tid ) {
       nodestack.pop_back ();
     }
   }
-#endif
 }
-
-#ifdef INCYCLE
 
 void Database::determineCycledNodes ( DatabaseTreePtr tree, vector<int> &nodestack, vector<bool> &visited1, vector<bool> &visited2 ) {
   int node = nodestack.back ();
-  vector<DatabaseTreeEdge> &edges = tree->nodes[node].edges;
+  pvector<DatabaseTreeEdge> &edges = tree->nodes[node].edges;
 
   for ( int i = 0; i < edges.size (); i++ ) {
     if ( !visited1[edges[i].tonode] ) {
@@ -236,7 +221,15 @@ void Database::determineCycledNodes ( DatabaseTreePtr tree, vector<int> &nodesta
   }
 }
 
-#endif 
+void Database::edgecount () {
+  for ( int i = 0; i < edgelabels.size (); i++ ) {
+    if ( edgelabels[i].frequency >= minfreq ) {
+      nodelabels[edgelabels[i].tonodelabel].frequentedgelabels.push_back ( i );
+      if ( edgelabels[i].fromnodelabel != edgelabels[i].tonodelabel )
+        nodelabels[edgelabels[i].fromnodelabel].frequentedgelabels.push_back ( i );
+    }
+  }
+}
 
 class EdgeLabelsIndexesSort:public std::binary_function<int,int,bool> {
     const vector<DatabaseEdgeLabel> &edgelabels;
@@ -265,11 +258,13 @@ void Database::reorder () {
 
   for ( int i = 0; i < edgelabelsindexes.size (); i++ ) {
     edgelabels[edgelabelsindexes[i]].edgelabel = i; // fill in the final edge labels
-    edgelabels[edgelabelsindexes[i]].tidlist.init (
-        edgelabels[edgelabelsindexes[i]].frequency 
-    );
+#ifdef DEBUG
+    DatabaseEdgeLabel &label = edgelabels[edgelabelsindexes[i]];
+    cout << (int) nodelabels[label.tonodelabel].inputlabel 
+         << "[" << (int) label.inputedgelabel << "]" 
+	 << (int) nodelabels[label.fromnodelabel].inputlabel <<"-->" << i <<endl;
+#endif
   }
-
 
   for ( Tid i = 0; i < trees.size (); i++ ) {
     DatabaseTree &tree = * (trees[i]);
@@ -277,37 +272,28 @@ void Database::reorder () {
       DatabaseTreeNode &node = tree.nodes[j];
       if ( nodelabels[node.nodelabel].frequency >= minfreq ) {
         DatabaseNodeLabel &nodelabel = nodelabels[node.nodelabel];
+	nodelabel.occurrences.elements.push_back (
+          LegOccurrence (
+            tree.tid,
+            (OccurrenceId) nodelabel.occurrences.elements.size (),
+            j,
+            NONODE
+          )
+        );
         int k = 0;
 	for ( int l = 0; l < node.edges.size (); l++ ) {
           EdgeLabel lab = node.edges[l].edgelabel;
 	  if ( edgelabels[lab].frequency >= minfreq ) {
-            edgelabels[lab].tidlist.push_back ( tree.tid );
-	    node.edges[k].edgelabel = edgelabels[lab].edgelabel; // translate old into new edge labels
+	    node.edges[k].edgelabel = edgelabels[node.edges[l].edgelabel].edgelabel; // translate old into new edge labels
 	    node.edges[k].tonode = node.edges[l].tonode;
 	    k++;
 	  }
 	}
 	node.edges.resize ( k );
-        // sort ( node.edges.begin (), node.edges.end () );
       }
       else
         node.edges.clear ();
     }
-  }
-  
-  for ( int i = 0; i < edgelabels.size (); i++ ) {
-/*   cout << nodelabels[edgelabels[i].fromnodelabel].inputlabel << "-"
-        << edgelabels[i].inputedgelabel << "-" 
-	<< nodelabels[edgelabels[i].tonodelabel].inputlabel 
-	<< "-->" << (int) edgelabels[i].edgelabel << endl;*/
-    if ( edgelabels[i].frequency >= minfreq ) {
-      nodelabels[edgelabels[i].tonodelabel].frequentedgelabels.push_back ( edgelabels[i].edgelabel );
-      nodelabels[edgelabels[i].fromnodelabel].frequentedgelabels.push_back ( edgelabels[i].edgelabel );
-    }
-  }
-  
-  for ( int i = 0; i < nodelabels.size (); i++ ) {
-    sort ( nodelabels[i].frequentedgelabels.begin (), nodelabels[i].frequentedgelabels.end () );
   }
 }
 

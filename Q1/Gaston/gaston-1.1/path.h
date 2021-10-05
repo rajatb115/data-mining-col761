@@ -6,24 +6,38 @@
 #include <vector>
 #include "misc.h"
 #include "database.h"
-#include "legmanager.h"
+#include "legoccurrence.h"
+#include "closeleg.h"
 //#include "patterntree.h"
 
 using namespace std;
 
+struct PathTuple {
+  Depth depth;
+  NodeId connectingnode;
+  EdgeLabel edgelabel;
+  NodeLabel nodelabel;
+};
+
+struct PathLeg {
+  PathTuple tuple;
+  LegOccurrences occurrences;
+};
+
+typedef PathLeg *PathLegPtr;
+
 class Path {
   public:
-    Path ( DatabaseEdgeLabel &databaseedgelabel );
+    Path ( NodeLabel startnodelabel );
     ~Path ();
     void expand ();
   private:
-    TidList *tidlist;
-    bool isnormal ( EdgeLabel edgelabel ); // ADDED
     friend class PatternTree;
+    bool isnormal ( EdgeLabel edgelabel ); // ADDED
     void expand2 ();
     Path ( Path &parentpath, unsigned int legindex );
-    vector<Leg> legs; 
-    vector<CloseLeg> closelegs;
+    vector<PathLegPtr> legs; // pointers used to avoid copy-constructor during a resize of the vector
+    vector<CloseLegPtr> closelegs;
     vector<NodeLabel> nodelabels;
     vector<EdgeLabel> edgelabels;
     int frontsymmetry; // which is lower, the front or front reverse?

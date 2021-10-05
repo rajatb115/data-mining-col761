@@ -29,10 +29,10 @@ struct LegOccurrences {
   vector<LegOccurrence> elements;
   LegOccurrencesPtr parent;
   int number;
-  bool selfjoin;
+  Frequency selfjoin;
   short unsigned int maxdegree;
   Frequency frequency;
-  LegOccurrences () : frequency ( 0 ) { }
+  LegOccurrences () : frequency ( 0 ), selfjoin ( 0 ) { }
 };
 
 ostream &operator<< ( ostream &stream, vector<LegOccurrence> &occs );

@@ -6,7 +6,6 @@
 #include "path.h"
 #include "misc.h"
 #include "graphstate.h"
-#include "simplesubiso.h"
 #include <time.h>
 #include <unistd.h>
 using namespace std;
@@ -16,7 +15,7 @@ Database database;
 Statistics statistics;
 bool dooutput = false;
 int phase = 3;
-int maxsize = MAXPATSIZE; 
+int maxsize = ( 1 << ( sizeof(NodeId)*8 ) ) - 1; // safe default for the largest allowed pattern
 FILE *output;
 
 void Statistics::print () {
@@ -53,7 +52,7 @@ void puti ( FILE *f, int i ) {
 main ( int argc, char *argv[] ) {
   clock_t t1 = clock ();
   cerr << "GASTON GrAph, Sequences and Tree ExtractiON algorithm" << endl;
-  cerr << "Version 1.0 with Recomputed Occurrences" << endl;
+  cerr << "Version 1.0 with Occurrence Lists" << endl;
   cerr << "Siegfried Nijssen, LIACS, 2004" << endl;
   
   char opt;
@@ -77,26 +76,28 @@ main ( int argc, char *argv[] ) {
     dooutput = true;
     output = fopen ( argv[optind+2], "w" );
   }
-  database.read ( input );
+  int tg = database.read ( input );
+  cerr << tg <<endl;
+  minfreq = minfreq*tg/100;
+  cerr << minfreq << endl;
   fclose ( input );
-  cerr << "Reorder & Tid List build" << endl;
+  cerr << "Edgecount" << endl;
+  database.edgecount ();
+  cerr << "Reorder" << endl;
   database.reorder ();
-  
-  simplesubiso = new SimpleSubIso;
-  simplesubiso->init ( database.largestnedges, database.largestnnodes );
-  legmanager.init ( database.largestnnodes,database.edgelabels.size () );
 
+  initLegStatics ();
   graphstate.init ();
-  for ( int i = 0; i < database.edgelabels.size (); i++ ) {
-    if ( database.edgelabels[i].frequency >= minfreq ) {
-      Path path ( database.edgelabels[i] );
+  for ( int i = 0; i < database.nodelabels.size (); i++ ) {
+    if ( database.nodelabels[i].frequency >= minfreq &&
+         database.nodelabels[i].frequentedgelabels.size () ) {
+      Path path ( i );
       path.expand ();
     }
   }
 
   clock_t t2 = clock ();
 
-  delete simplesubiso;
   statistics.print ();
   cout << "Approximate total runtime: " << ( (float) t2 - t1 ) / CLOCKS_PER_SEC << "s" << endl;
   if ( argc - optind == 3 )

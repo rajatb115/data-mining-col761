@@ -6,20 +6,15 @@
 #include <vector>
 #include <iostream>
 #include "database.h"
-#include "legmanager.h"
+#include "closeleg.h"
 #include "patterntree.h"
 using namespace std;
-
-#define Tuple Leg
-#define CloseTuple CloseLeg 
 
 typedef unsigned int Mark;
 
 class GraphState;
 
 extern GraphState graphstate;
-
-class SubGraphIso;
 
 class GraphState {
   public:
@@ -58,17 +53,18 @@ class GraphState {
     };
     struct GSNode {
       NodeLabel label;
+      short unsigned int maxdegree;
       vector<GSEdge> edges;
     };
     //keep for debugging purposes
     void makeState ( DatabaseTree *databasetree );
     void undoState ();
-    void insertNode ( NodeLabel nodelabel );
+    void insertNode ( NodeLabel nodelabel, short unsigned int maxdegree );
     void deleteNode2 ();
     vector<GSNode> nodes;
-    SubGraphIso *subgraphiso;
     int edgessize;
     short unsigned int getNodeDegree ( int i ) const { return nodes[i].edges.size (); }
+    short unsigned int getNodeMaxDegree ( int i ) const { return nodes[i].maxdegree; }
     GraphState ();
     void determineCycles ( unsigned int usedbit );
     int enumerateSpanning ();
@@ -78,7 +74,7 @@ class GraphState {
     void init ();
     void insertStartNode ( NodeLabel nodelabel );
     void deleteStartNode ();
-    void insertNode ( int from, EdgeLabel edgelabel );
+    void insertNode ( int from, EdgeLabel edgelabel, short unsigned int maxdegree );
     void deleteNode ();
     void insertEdge ( int from, int to, EdgeLabel edgelabel );
     void deleteEdge ( int from, int to );

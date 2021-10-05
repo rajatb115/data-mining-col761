@@ -4,14 +4,146 @@
 #include "database.h"
 #include "misc.h"
 #include <queue>
-#define MAXGRAPHSIZE 255
 
 GraphState graphstate;
+
+#ifdef DEBUG
+
+// The functions in the DEBUG sections allow for reading in a graph from a file,
+// and to check during the run of the algorithm if this graph is found.
+// If an analysis reveals that one particular graph is missing, this allows
+// to stop the debugger on one particular graph (eg. the parent of the graph
+// that is missing, without knowing the id of the parent). 
+
+char readcommand ( FILE *input );
+int readint ( FILE *input );
+DatabaseTree *debugtree;
+
+void readDebug () {
+  InputNodeLabel inputnodelabel;
+
+  DatabaseTreePtr tree = new DatabaseTree ( 0 );
+
+  char command;
+  int dummy;
+  int nodessize = 0, edgessize = 0;
+  FILE *input = fopen ( "debug", "r" );
+  command = readcommand ( input );
+  
+  static vector<DatabaseTreeNode> nodes;
+  static vector<vector<DatabaseTreeEdge> > edges;
+  nodes.resize ( 0 );
+
+  while ( command == 'v' ) {
+    dummy = readint ( input );
+    inputnodelabel = readint ( input );
+    if ( dummy != nodessize ) {
+      cerr << "Error reading input file - node number does not correspond to its position." << endl;
+      exit ( 1 );
+    }
+    nodessize++;
+    pair<map<InputNodeLabel,NodeLabel>::iterator,bool> 
+      p = database.nodelabelmap.insert ( make_pair ( inputnodelabel, database.nodelabels.size () ) );
+    if ( p.second ) {
+      cout << "ERROR! Debug label does not occur in dataset" << endl;
+    }
+    
+    vector_push_back ( DatabaseTreeNode, nodes, node );
+    node.nodelabel = p.first->second;
+    node.incycle = false;
+
+    command = readcommand ( input );
+  }
+
+  tree->nodes.reserve ( nodessize );
+  if ( edges.size () < nodessize )
+    edges.resize ( nodessize );
+  for ( int i = 0; i < nodessize; i++ ) {
+    edges[i].resize ( 0 );
+    tree->nodes.push_back ( nodes[i] );
+  }
+  
+  InputEdgeLabel inputedgelabel;
+  InputNodeId nodeid1, nodeid2;
+
+  while ( !feof ( input ) && command == 'e' ) {
+    nodeid1 = readint ( input );
+    nodeid2 = readint ( input );
+    inputedgelabel = readint ( input );
+    NodeLabel node2label = tree->nodes[nodeid2].nodelabel;
+    NodeLabel node1label = tree->nodes[nodeid1].nodelabel;
+    CombinedInputLabel combinedinputlabel;
+    if ( node1label > node2label ) {
+      NodeLabel temp = node1label;
+      node1label = node2label;
+      node2label = temp;
+    }
+    combinedinputlabel = combineInputLabels ( inputedgelabel, node1label, node2label );
+
+    pair<map<CombinedInputLabel,EdgeLabel>::iterator,bool>
+      p = database.edgelabelmap.insert ( make_pair ( combinedinputlabel, database.edgelabels.size () ) );
+    if ( p.second ) 
+      cout << "Edge label does not occur in the dataset" << endl;
+
+    vector_push_back ( DatabaseTreeEdge, edges[nodeid1], edge );
+    edge.edgelabel = database.edgelabels[p.first->second].edgelabel;
+    edge.tonode = nodeid2;
+
+    vector_push_back ( DatabaseTreeEdge, edges[nodeid2], edge2 );
+    edge2.edgelabel = database.edgelabels[p.first->second].edgelabel;
+    edge2.tonode = nodeid1;
+
+    edgessize++;
+
+    command = readcommand ( input );
+  }
+
+  tree->edges = new DatabaseTreeEdge[edgessize * 2];
+  int pos = 0;
+  for ( int i = 0; i < nodessize; i++ ) {
+    int s = edges[i].size ();
+    tree->nodes[i].edges._size = s;
+    tree->nodes[i].edges.array = tree->edges + pos;
+    for ( int j = 0; j < s; j++, pos++ ) {
+      tree->edges[pos] = edges[i][j];
+    }
+  }
+  debugtree = tree;
+  fclose ( input );
+}
+
+bool isLookFor () {
+  if ( graphstate.nodes.size () != debugtree->nodes.size () ) 
+    return false;
+  for ( int i = 0; i < graphstate.nodes.size (); i++ ) {
+    if ( graphstate.nodes[i].label != debugtree->nodes[i].nodelabel ||
+         graphstate.nodes[i].edges.size () != debugtree->nodes[i].edges.size () )
+      return false;
+  }
+  for ( int i = 0; i < graphstate.nodes.size (); i++ ) {
+    for ( int j = 0; j < graphstate.nodes[i].edges.size (); j++ ) {
+      int k;
+      for ( k = 0; k < debugtree->nodes[i].edges.size (); k++ )
+        if ( graphstate.nodes[i].edges[j].tonode == 
+	     debugtree->nodes[i].edges[k].tonode &&
+	     graphstate.nodes[i].edges[j].edgelabel ==
+	     debugtree->nodes[i].edges[k].edgelabel )
+	  break;
+      if ( k == debugtree->nodes[i].edges.size () )
+        return false;
+    }
+  }
+  return true;
+}
+#endif
 
 GraphState::GraphState () {
 }
 
 void GraphState::init () {
+#ifdef DEBUG
+  readDebug ();
+#endif
   edgessize = 0;
   closecount = 0;
   // 1 extra element on this stack in order to always be able to check the previous element
@@ -19,13 +151,14 @@ void GraphState::init () {
   deletededge.tonode = deletededge.fromnode = NONODE;
 }
 
-void GraphState::insertNode ( NodeLabel nodelabel ) {
+void GraphState::insertNode ( NodeLabel nodelabel, short unsigned int maxdegree ) {
   vector_push_back ( GSNode, nodes, node );
   node.label = nodelabel;
+  node.maxdegree = maxdegree;
 }
 
 void GraphState::insertStartNode ( NodeLabel nodelabel ) {
-  insertNode ( nodelabel );
+  insertNode ( nodelabel, (short unsigned int) (-1) );
 }
 
 void GraphState::deleteNode2 () {
@@ -36,7 +169,7 @@ void GraphState::deleteStartNode () {
   deleteNode2 ();
 }
 
-void GraphState::insertNode ( int from, EdgeLabel edgelabel  ) {
+void GraphState::insertNode ( int from, EdgeLabel edgelabel, short unsigned int maxdegree  ) {
   NodeLabel fromlabel = nodes[from].label, tolabel;
   DatabaseEdgeLabel &dataedgelabel = database.edgelabels[  database.edgelabelsindexes[edgelabel]];
   if ( dataedgelabel.fromnodelabel == fromlabel )
@@ -46,7 +179,7 @@ void GraphState::insertNode ( int from, EdgeLabel edgelabel  ) {
   // insert into graph
   int to = nodes.size ();
   
-  insertNode ( tolabel );
+  insertNode ( tolabel, maxdegree );
   nodes[to].edges.push_back ( GSEdge ( from, nodes[from].edges.size (), edgelabel ) );
   nodes[from].edges.push_back ( GSEdge ( to, nodes[to].edges.size () - 1, edgelabel ) );
   edgessize++;
@@ -62,14 +195,14 @@ void GraphState::deleteNode () {
 }
 
 void GraphState::insertEdge ( int from, int to, EdgeLabel edgelabel ) {
-  //from--; to--;
+  from--; to--;
   nodes[to].edges.push_back ( GSEdge ( from, nodes[from].edges.size (), edgelabel, true ) );
   nodes[from].edges.push_back ( GSEdge ( to, nodes[to].edges.size () - 1, edgelabel, true ) );
   edgessize++;
 }
 
 void GraphState::deleteEdge ( int from, int to ) {
-  //from--; to--;
+  from--; to--;
   //EdgeLabel edgelabel = nodes[to].edges.back ().edgelabel;
   nodes[to].edges.pop_back ();
   nodes[from].edges.pop_back ();
@@ -140,6 +273,10 @@ void GraphState::reinsertEdge () {
   closecount -= deletededge.close;
 }
 
+// THE FUNCTIONS BELOW PERFORM GRAPH NORMALISATION.
+// Given a graph, they determine whether the current code is canonical.
+// The algorithm is a horror to implement.
+
 int GraphState::normalizeSelf () {
   vector<pair<int, int> > removededges;
   selfdone = true;
@@ -152,7 +289,7 @@ int GraphState::normalizeSelf () {
   }
   
   for ( int i = closetuples->size () - 1; i >= 0; i-- ) 
-    deleteEdge ( nodes[(*closetuples)[i].from/*-1*/].edges.back () );
+    deleteEdge ( nodes[(*closetuples)[i].from-1].edges.back () );
   int b = normalizetree ();
   
   // then change the situation back
@@ -268,9 +405,10 @@ int GraphState::enumerateSpanning () {
   return 0;
 }
 
-int counter = 0;
+
 
 void GraphState::print ( FILE *f ) {
+  static int counter = 0;
   counter++;
   putc ( 't', f );
   putc ( ' ', f );
@@ -326,7 +464,7 @@ void GraphState::makeState ( DatabaseTree *databasetree ) {
 	}
       }
       else {
-        insertNode ( used[node] -1, databasetree->nodes[node].edges[i].edgelabel );
+        insertNode ( used[node] -1, databasetree->nodes[node].edges[i].edgelabel, 100 );
 	nqueue.push ( databasetree->nodes[node].edges[i].tonode );
 	pqueue.push ( node );
 	used[databasetree->nodes[node].edges[i].tonode] = nr;
@@ -345,6 +483,9 @@ void GraphState::undoState () {
   deleteStartNode ();
 }
 
+// In this function the real work is done. Currently it is one function (645 lines),
+// as many arrays are reused. This choice was made because this setup is more
+// efficient (but less readable, unfortunately).
 int GraphState::normalizetree () {
   unsigned int nrnodes = nodes.size ();
   int distmarkers[nrnodes];
@@ -379,22 +520,22 @@ int GraphState::normalizetree () {
       queuebegin++; // queuebegin should be on the second of two nodes
   }
   else
-  while ( done ) {
-    GSNode &node = nodes[queue[queuebegin]];
-    done = false;
-    for ( int i = 0; i < node.edges.size (); i++ ) {
-      tonode = node.edges[i].tonode;
-      adjacentdones[tonode]++;
-      int diff = nodes[tonode].edges.size () - adjacentdones[tonode];
-      done |= diff;
-      if ( diff == 1 ) {
-        distmarkers[tonode] = distmarkers[queue[queuebegin]] + 1;
-        queue[queueend] = tonode;
-	queueend++;
+    while ( done ) {
+      GSNode &node = nodes[queue[queuebegin]];
+      done = false;
+      for ( int i = 0; i < node.edges.size (); i++ ) {
+        tonode = node.edges[i].tonode;
+        adjacentdones[tonode]++;
+        int diff = nodes[tonode].edges.size () - adjacentdones[tonode];
+        done |= diff;
+        if ( diff == 1 ) {
+          distmarkers[tonode] = distmarkers[queue[queuebegin]] + 1;
+          queue[queueend] = tonode;
+	  queueend++;
+        }
       }
+      queuebegin++;
     }
-    queuebegin++;
-  }
 end:
   
   // discover the two canonical labeled paths
@@ -434,7 +575,9 @@ end:
       return 0;
   }
   int nodes[nrnodes];
-  int *depthnodes[maxdepth + 1]; // we sometimes overshoot this fill in, allthough we do not use the level
+  int *depthnodes[maxdepth + 1]; // we sometimes overshoot this fill in, allthough we do not use the level 
+                                 // This array is used to find the nodes for each level of the spanning
+				 // tree that we are currently considering
   int depthnodessizes[maxdepth + 1];
   int minlabelednodes[2][nrnodes];
   int minlabelednodessize[2] = { 0, 0 };
@@ -646,33 +789,33 @@ end:
   // here we have both paths
   if ( bicenter ) {
     for ( int i = 1; i < maxdepth; i++ ) {
-      if ( pathedgelabels[0][i] < (*treetuples)[i-1].edgelabel ) {
+      if ( pathedgelabels[0][i] < (*treetuples)[i-1].label ) {
         return 2;
       }
-      if ( pathedgelabels[0][i] > (*treetuples)[i-1].edgelabel )
+      if ( pathedgelabels[0][i] > (*treetuples)[i-1].label )
         return 0;
     }
     for ( int i = 1; i < maxdepth; i++ ) {
-      if ( pathedgelabels[1][i] < (*treetuples)[startsecondpath + i-1].edgelabel ) {
+      if ( pathedgelabels[1][i] < (*treetuples)[startsecondpath + i-1].label ) {
         return 2;
       }
-      if ( pathedgelabels[1][i] > (*treetuples)[startsecondpath + i-1].edgelabel )
+      if ( pathedgelabels[1][i] > (*treetuples)[startsecondpath + i-1].label )
         return 0;
     }
   }
   else {
     for ( int i = 0; i < maxdepth; i++ ) {
-      if ( pathedgelabels[0][i] < (*treetuples)[i].edgelabel ) {
+      if ( pathedgelabels[0][i] < (*treetuples)[i].label ) {
         return 2;
       }
-      if ( pathedgelabels[0][i] > (*treetuples)[i].edgelabel )
+      if ( pathedgelabels[0][i] > (*treetuples)[i].label )
         return 0;
     }
     for ( int i = 0; i < maxdepth; i++ ) {
-      if ( pathedgelabels[1][i] < (*treetuples)[startsecondpath + i].edgelabel ) {
+      if ( pathedgelabels[1][i] < (*treetuples)[startsecondpath + i].label ) {
         return 2;
       }
-      if ( pathedgelabels[1][i] > (*treetuples)[startsecondpath + i].edgelabel )
+      if ( pathedgelabels[1][i] > (*treetuples)[startsecondpath + i].label )
         return 0;
     }
   }
@@ -791,29 +934,26 @@ end:
     preorder++;
   }
   int codewalk = 0;
-  int bicnt = 0; // to make sure in the bicentred case that the first tree is `larger'
+  int bicnt = 0;
   while ( stacksize != 0 ) {
     stacksize--;
     int nodeid = stack[stacksize];
     int depth = depths[stacksize];
     preordernumber[nodeid] = preorder; // fill in pre-order numbers that may be needed in the next phase
     if ( !bicenter || depths[stacksize] ) {
-      if ( bicnt == 1 && preorder > startsecondpath ) {
-          // we're currently considering another code (using codewalk) in which
-          // the second path starts later than in the original code. Quit!
+      if ( bicnt == 1 && preorder > startsecondpath )
         return 2;
-      }
       int cmp = depths[stacksize] + mod - (*treetuples)[codewalk].depth;
       if ( cmp > 0 || 
            ( cmp == 0 && 
-             nodes_edgelabel[nodeid] < (*treetuples)[codewalk].edgelabel
+             nodes_edgelabel[nodeid] < (*treetuples)[codewalk].label
            ) 
          ) {
         return 2;
       }
       if ( cmp < 0 || 
            ( cmp == 0 && 
-             nodes_edgelabel[nodeid] > (*treetuples)[codewalk].edgelabel
+             nodes_edgelabel[nodeid] > (*treetuples)[codewalk].label
            ) 
          )
         return 0;
@@ -821,11 +961,8 @@ end:
     }
     else {
       bicnt++;
-      if ( preorder && preorder <= startsecondpath ) {
-        // this was a bug: in the bicentred case the leg of the second backbone
-        // was used in the first backbone.
+      if ( preorder && preorder<= startsecondpath )
         return 0;
-      }
     }
     for ( int j = nodes_nochildren[nodeid] - 1; j >= 0; j-- ) {
       stack[stacksize] = nodes_firstchild[nodeid][j];
@@ -948,21 +1085,21 @@ end:
         // first fill in the unordered closing sequence
         int ddsize = deletededges.size () - 1;
         for ( int i = 0; i < ddsize; i++ ) {
-          closetuples[i].edgelabel = deletededges[i+1].edgelabel;
+          closetuples[i].label = deletededges[i+1].edgelabel;
           int p = 0;
           int ni = nodesinbt[deletededges[i+1].fromnode];
           while ( ni != NONODE ) {
             p += btcode[ni];
             ni = btparent[ni];
           }
-          closetuples[i].from = nodesinpreorder[p]; // + 1; // TAKE CARE OF THE +1
+          closetuples[i].from = nodesinpreorder[p] + 1; // TAKE CARE OF THE +1
           p = 0;
           ni = nodesinbt[deletededges[i+1].tonode];
           while ( ni != NONODE ) {
             p += btcode[ni];
             ni = btparent[ni];
           }
-          closetuples[i].to = nodesinpreorder[p]; // + 1;
+          closetuples[i].to = nodesinpreorder[p] + 1;
           if ( closetuples[i].to > closetuples[i].from )
             swap ( closetuples[i].to, closetuples[i].from );
         }
@@ -1002,19 +1139,5 @@ end2:
     }
   }
 
-    
   return 0;
-  
-  /*for ( int i = 0; i < maxdepth; i++ ){
-    for ( int j = 0; j < depthnodessizes[i]; j++ )
-      cout << "Depth " << i << " " << depthnodes[i][j] << " ";
-    cout << endl;
-  }
-  
-  for ( int i = 0; i < nrnodes; i++ ) {
-    cout << i << " " << nodes_treenr[i] << " " << nodes_marker[i] << " " << nodes_edgelabel[i] << " " << nodes_code[i] <<  endl;
-  }
-  
-  for ( int i = 0; i < pathedgelabelssize; i++ )
-    cout << "L " << pathedgelabels[0][i] << " " << pathedgelabels[1][i] << endl;*/
 }

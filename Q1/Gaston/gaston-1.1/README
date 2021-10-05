@@ -67,16 +67,11 @@ COMMAND LINE OPTIONS
 
 KNOWN ISSUES
 ------------
-Gaston uses anotations in the database to speed up the frequent graph
-discovery process. By default these anotations are 32 bit, and the longest
-frequent pattern that can be found by the default implementation contains
-32 edges. To allow for longer patterns, one option is to modify the definition
-of PATMASKTYPE in misc.h. Use unsigned long long for patterns of maximally
-64 edges. For larger patterns further modifications would be required, but
-probably frequent graph mining is not feasible in such situations. For small
-datasets consider the occurrence list version of Gaston. Gaston (Occurrence Lists)
-is considerably faster, but at the other hand requires exponentially more main 
-memory.
+Gaston uses occurrence lists to determine the occurrences of a graph.
+These occurrence lists require a lot of main memory. To some extent
+the amount of main memory can be reduced by modifying the typedefs
+for Tids, NodeIds and EdgeLabels in misc.h. Alternatively, download
+the version of Gaston which does not use occurrence lists.
 
 LICENSE
 -------

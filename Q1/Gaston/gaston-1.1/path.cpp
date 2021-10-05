@@ -5,94 +5,110 @@
 #include "patterngraph.h"
 #include "path.h"
 #include "graphstate.h"
-#include "simplesubiso.h"
 
-Path::Path ( DatabaseEdgeLabel &databaseedgelabel ) {
-  NodeLabel startnodelabel = databaseedgelabel.fromnodelabel,
-            endnodelabel = databaseedgelabel.tonodelabel;
-  EdgeLabel edgelabel = databaseedgelabel.edgelabel;
-  
+Path::Path ( NodeLabel startnodelabel ) {
   graphstate.insertStartNode ( startnodelabel );
-  graphstate.insertNode ( 0, edgelabel );
-  
-  OUTPUT(databaseedgelabel.frequency)
-  
-  frontsymmetry = backsymmetry = 0;
-  
-  cout << "Edge " 
-       << database.nodelabels[startnodelabel].inputlabel << "(" << (int) startnodelabel << ")"
-       << "-[" << databaseedgelabel.inputedgelabel << "]-"
-       << database.nodelabels[endnodelabel].inputlabel << "(" << (int) endnodelabel << ")" <<endl;
-  
+
+  nodelabels.push_back ( startnodelabel );
+  frontsymmetry = backsymmetry = totalsymmetry = 0;
+
+  cout << "Root " << database.nodelabels[startnodelabel].inputlabel << endl;
+
   DatabaseNodeLabel &databasenodelabel = database.nodelabels[startnodelabel];
- 
-  // "trick" to do extensions in two directions: extend one, fill legs for the other  
-  
-  vector<EdgeLabel> &frequentedgelabels = databasenodelabel.frequentedgelabels;
+
+  vector<EdgeLabel> edgelabelorder ( database.edgelabelsindexes.size () );
+  EdgeLabel j = 0;
+
+  vector<EdgeLabel> frequentedgelabels;
+  for ( int i = 0; i < databasenodelabel.frequentedgelabels.size (); i++ )
+    frequentedgelabels.push_back ( database.edgelabels[databasenodelabel.frequentedgelabels[i]].edgelabel );
+/*  for ( int i = 0; i < databasenodelabel.edgelabelfrequencies.size (); i++ )
+    if ( databasenodelabel.edgelabelfrequencies[i] >= minfreq )
+      frequentedgelabels.push_back ( database.edgelabels[i].edgelabel );*/
+  sort ( frequentedgelabels.begin (), frequentedgelabels.end () );
+  Tid lastself[frequentedgelabels.size ()];
 
   for ( int i = 0; i < frequentedgelabels.size (); i++ ) {
-    Leg leg;
-    leg.depth = 0;
-    leg.edgelabel = frequentedgelabels[i];
-    leg.connectingnode = 0;
-    DatabaseEdgeLabel &databaseedgelabel2 = database.edgelabels[database.edgelabelsindexes[frequentedgelabels[i]]];
-    if ( databaseedgelabel2.fromnodelabel == startnodelabel )
-      leg.nodelabel = databaseedgelabel2.tonodelabel;
-    else
-      leg.nodelabel = databaseedgelabel2.fromnodelabel;
-    legmanager.appendLeg ( leg );
-  }
-  nodelabels.push_back ( startnodelabel );
-  edgelabels.push_back ( edgelabel );
-  nodelabels.push_back ( endnodelabel );
-  totalsymmetry = startnodelabel - endnodelabel;
-  
-  legmanager.appendExtensionLegs ( 1, 1, 0 );
+    edgelabelorder[frequentedgelabels[i]] = j;
+    j++;
 
-  graphstate.subgraphiso = simplesubiso;
+    PathLegPtr leg = new PathLeg;
+    legs.push_back ( leg );
+    leg->tuple.depth = 0;
+    leg->tuple.edgelabel = frequentedgelabels[i];
+    leg->tuple.connectingnode = 0;
+    leg->occurrences.parent = &databasenodelabel.occurrences;
+    leg->occurrences.number = 2;
+    leg->occurrences.maxdegree = 0;
+    leg->occurrences.selfjoin = 0;
+    lastself[i] = NOTID;
+    DatabaseEdgeLabel &databaseedgelabel = database.edgelabels[database.edgelabelsindexes[frequentedgelabels[i]]];
+    leg->occurrences.frequency = databaseedgelabel.frequency;
+    if ( databaseedgelabel.fromnodelabel == startnodelabel )
+      leg->tuple.nodelabel = databaseedgelabel.tonodelabel;
+    else
+      leg->tuple.nodelabel = databaseedgelabel.fromnodelabel;
+  }
+
+  for ( unsigned int i = 0; i < databasenodelabel.occurrences.elements.size (); i++ ) {
+    DatabaseTree &tree = * (database.trees[databasenodelabel.occurrences.elements[i].tid]);
+    DatabaseTreeNode &datanode = tree.nodes[databasenodelabel.occurrences.elements[i].tonodeid];
+    for ( int j = 0; j < datanode.edges.size (); j++ ) {
+      EdgeLabel edgelabel = edgelabelorder[datanode.edges[j].edgelabel];
+      PathLeg &leg = * ( legs[edgelabel] );
+      if ( !leg.occurrences.elements.empty () &&
+           leg.occurrences.elements.back ().occurrenceid == i &&
+           lastself[edgelabel] != tree.tid ) {
+        leg.occurrences.selfjoin++;
+        lastself[edgelabel] = tree.tid;
+      }
+      vector_push_back ( LegOccurrence, leg.occurrences.elements, legoccurrence );
+      legoccurrence.tid = tree.tid;
+      legoccurrence.occurrenceid = i;
+      legoccurrence.tonodeid = datanode.edges[j].tonode;
+      legoccurrence.fromnodeid = databasenodelabel.occurrences.elements[i].tonodeid;
+    }
+  }
   
-  tidlist = databaseedgelabel.tidlist.evaluateState();
-  
-  legmanager.fillLegs ( legs, closelegs );
 }
 
 Path::Path ( Path &parentpath, unsigned int legindex ) {
-  Leg &leg = parentpath.legs[legindex];
+  PathLeg &leg = (*parentpath.legs[legindex]);
   int positionshift;
   
-  OUTPUT(parentpath.legs[legindex].frequency)
+  OUTPUT(parentpath.legs[legindex]->occurrences.frequency)
  
   // fill in normalisation information, it seems a lot of code, but in fact it's just a lot
   // of code to efficiently perform one walk through the edge/nodelabels arrays.
 
   nodelabels.resize ( parentpath.nodelabels.size () + 1 );
   edgelabels.resize ( parentpath.edgelabels.size () + 1 );
-  legmanager.appendCloseLegs ( parentpath.closelegs );
+  addCloseExtensions ( closelegs, parentpath.closelegs, leg.occurrences );
 
   if ( parentpath.nodelabels.size () == 1 ) {
-    totalsymmetry = parentpath.nodelabels[0] - leg.nodelabel;
+    totalsymmetry = parentpath.nodelabels[0] - leg.tuple.nodelabel;
     frontsymmetry = backsymmetry = 0;
-    nodelabels[1] = leg.nodelabel;
-    edgelabels[0] = leg.edgelabel;
+    nodelabels[1] = leg.tuple.nodelabel;
+    edgelabels[0] = leg.tuple.edgelabel;
     nodelabels[0] = parentpath.nodelabels[0];
     positionshift = 0;
   }
-  else if ( leg.depth == 0 ) {
+  else if ( leg.tuple.depth == 0 ) {
     positionshift = 1;
-    nodelabels[0] = leg.nodelabel;
-    edgelabels[0] = leg.edgelabel;
+    nodelabels[0] = leg.tuple.nodelabel;
+    edgelabels[0] = leg.tuple.edgelabel;
 
     backsymmetry = parentpath.totalsymmetry;
-    frontsymmetry = leg.nodelabel - parentpath.nodelabels[parentpath.nodelabels.size () - 2];
-    totalsymmetry = leg.nodelabel - parentpath.nodelabels.back ();
+    frontsymmetry = leg.tuple.nodelabel - parentpath.nodelabels[parentpath.nodelabels.size () - 2];
+    totalsymmetry = leg.tuple.nodelabel - parentpath.nodelabels.back ();
     if ( !totalsymmetry )
-      totalsymmetry = leg.edgelabel - parentpath.edgelabels.back ();
+      totalsymmetry = leg.tuple.edgelabel - parentpath.edgelabels.back ();
 
     int i = 0;
     // we can prepend only before strings of length 2
     if ( parentpath.nodelabels.size () > 2 ) {
       if ( !frontsymmetry )
-        frontsymmetry = leg.edgelabel - parentpath.edgelabels[parentpath.nodelabels.size () - 3];
+        frontsymmetry = leg.tuple.edgelabel - parentpath.edgelabels[parentpath.nodelabels.size () - 3];
 
       while ( !frontsymmetry && i < parentpath.edgelabels.size () / 2 ) {
         nodelabels[i + 1] = parentpath.nodelabels[i];
@@ -126,20 +142,36 @@ Path::Path ( Path &parentpath, unsigned int legindex ) {
 
     nodelabels[i + 1] = parentpath.nodelabels[i];
 
-    legmanager.appendExtensionLegs ( 0, graphstate.lastNode (), leg.connectingnode );
+    // build OccurrenceLists
+    extend ( leg.occurrences );
+    for ( int i = 0; i < candidatelegsoccurrences.size (); i++ ) {
+      if ( candidatelegsoccurrences[i].frequency >= minfreq ) {
+        PathLegPtr leg2 = new PathLeg;
+        legs.push_back ( leg2 );
+        leg2->tuple.edgelabel = i;
+	leg2->tuple.connectingnode = graphstate.lastNode ();
+        DatabaseEdgeLabel &databaseedgelabel = database.edgelabels[database.edgelabelsindexes[i]];
+        if ( databaseedgelabel.fromnodelabel == leg.tuple.nodelabel )
+          leg2->tuple.nodelabel = databaseedgelabel.tonodelabel;
+        else
+          leg2->tuple.nodelabel = databaseedgelabel.fromnodelabel;
+        leg2->tuple.depth = 0;
+        store ( leg2->occurrences, candidatelegsoccurrences[i] ); // avoid copying
+      }
+    }
   }
   else  {
     positionshift = 0;
 
     frontsymmetry = parentpath.totalsymmetry;
-    backsymmetry = parentpath.nodelabels[1] - leg.nodelabel;
-    totalsymmetry = parentpath.nodelabels[0] - leg.nodelabel;
+    backsymmetry = parentpath.nodelabels[1] - leg.tuple.nodelabel;
+    totalsymmetry = parentpath.nodelabels[0] - leg.tuple.nodelabel;
     if ( !totalsymmetry )
-      totalsymmetry = parentpath.edgelabels[0] - leg.edgelabel;
+      totalsymmetry = parentpath.edgelabels[0] - leg.tuple.edgelabel;
     int i = 0;
     if ( parentpath.nodelabels.size () > 2 ) {
       if ( !backsymmetry )
-        backsymmetry = parentpath.edgelabels[1] - leg.edgelabel;
+        backsymmetry = parentpath.edgelabels[1] - leg.tuple.edgelabel;
 
       while ( !backsymmetry && i < parentpath.edgelabels.size () / 2 ) {
         nodelabels[i] = parentpath.nodelabels[i];
@@ -170,35 +202,82 @@ Path::Path ( Path &parentpath, unsigned int legindex ) {
     }
 
     nodelabels[i] = parentpath.nodelabels[i];
-    edgelabels[i] = leg.edgelabel;
-    nodelabels[i+1] = leg.nodelabel;
+    edgelabels[i] = leg.tuple.edgelabel;
+    nodelabels[i+1] = leg.tuple.nodelabel;
   }
 
-  int s = parentpath.legs.size ();
-  for ( int i = 0; i < s; i++ ) {
-    Leg leg2 = parentpath.legs[i];
-    leg2.depth += positionshift;
-    legmanager.appendLeg ( leg2 );
+  int i = 0;
+  LegOccurrencesPtr legoccurrencesptr;
+  for ( ; i < legindex; i++ ) {
+    PathLeg &leg2 = (*parentpath.legs[i]);
+
+    if ( legoccurrencesptr = join ( leg.occurrences, leg2.tuple.connectingnode, leg2.occurrences ) ) {
+      PathLegPtr leg3 = new PathLeg;
+      legs.push_back ( leg3 );
+      leg3->tuple.connectingnode = leg2.tuple.connectingnode;
+      leg3->tuple.edgelabel = leg2.tuple.edgelabel;
+      leg3->tuple.nodelabel = leg2.tuple.nodelabel;
+      leg3->tuple.depth = leg2.tuple.depth + positionshift;
+      store ( leg3->occurrences, *legoccurrencesptr );
+    }
   }
-  
-  if ( !positionshift ) 
-    legmanager.appendExtensionLegs ( leg.depth + 1, graphstate.lastNode (), leg.connectingnode );
-  
-  graphstate.subgraphiso = simplesubiso;
-  
-  tidlist = parentpath.tidlist->evaluateState();
-  
-  legmanager.fillLegs ( legs, closelegs );  
+
+  if ( legoccurrencesptr = join ( leg.occurrences ) ) {
+    PathLegPtr leg3 = new PathLeg;
+    legs.push_back ( leg3 );
+    leg3->tuple.connectingnode = leg.tuple.connectingnode;
+    leg3->tuple.edgelabel = leg.tuple.edgelabel;
+    leg3->tuple.nodelabel = leg.tuple.nodelabel;
+    leg3->tuple.depth = leg.tuple.depth + positionshift;
+    store ( leg3->occurrences, *legoccurrencesptr );
+  }
+
+  for ( i++; i < parentpath.legs.size (); i++ ) {
+    PathLeg &leg2 = (*parentpath.legs[i]);
+    if ( legoccurrencesptr = join ( leg.occurrences, leg2.tuple.connectingnode, leg2.occurrences ) ) {
+      PathLegPtr leg3 = new PathLeg;
+      legs.push_back ( leg3 );
+      leg3->tuple.connectingnode = leg2.tuple.connectingnode;
+      leg3->tuple.edgelabel = leg2.tuple.edgelabel;
+      leg3->tuple.nodelabel = leg2.tuple.nodelabel;
+      leg3->tuple.depth = leg2.tuple.depth + positionshift;
+      store ( leg3->occurrences, *legoccurrencesptr );
+    }
+  }
+
+  if ( positionshift ) {
+    addCloseExtensions ( closelegs, leg.occurrences.number ); // stored separately
+    return;
+  }
+
+  extend ( leg.occurrences );
+  for ( int i = 0; i < candidatelegsoccurrences.size (); i++ ) {
+    if ( candidatelegsoccurrences[i].frequency >= minfreq ) {
+      PathLegPtr leg2 = new PathLeg;
+      legs.push_back ( leg2 );
+      leg2->tuple.edgelabel = i;
+      leg2->tuple.connectingnode = graphstate.lastNode ();
+      DatabaseEdgeLabel &databaseedgelabel = database.edgelabels[database.edgelabelsindexes[i]];
+      if ( databaseedgelabel.fromnodelabel == leg.tuple.nodelabel )
+        leg2->tuple.nodelabel = databaseedgelabel.tonodelabel;
+      else
+        leg2->tuple.nodelabel = databaseedgelabel.fromnodelabel;
+      leg2->tuple.depth = leg.tuple.depth + 1;
+      store ( leg2->occurrences, candidatelegsoccurrences[i] ); // avoid copying
+    }
+  }
+
+  addCloseExtensions ( closelegs, leg.occurrences.number );
 }
 
 Path::~Path () {
-  delete tidlist;
+  for ( int i = 0; i < legs.size (); i++ )
+    delete legs[i];
+  for ( int i = 0; i < closelegs.size (); i++ )
+    delete closelegs[i];
 }
 
 // ADDED
-
-extern int counter;
-
 bool Path::isnormal ( EdgeLabel edgelabel ) {
   // symplistic quadratic algorithm
   int nodelabelssize = nodelabels.size (), step, add, start;
@@ -285,25 +364,26 @@ void Path::expand2 () {
     statistics.frequentgraphnumbers.push_back ( 0 );
   }
   ++statistics.frequentpathnumbers[statistics.patternsize-1];
-
+  
   if ( statistics.patternsize == maxsize ) {
     statistics.patternsize--;
     return;
   }
-      
+  
   if ( closelegs.size () && phase > 2 ) {
     
-    NodeId from = graphstate.nodes.size () - 1;
+    NodeId from = graphstate.nodes.size ();
     NodeId to = 0;
     while ( graphstate.nodes[to].edges.size () == 2 )
       to++;
+    to++;
       
     for ( int i = 0; i < closelegs.size (); i++ ) {
-      if ( closelegs[i].from == from &&
-           closelegs[i].to == to &&
-           isnormal ( closelegs[i].edgelabel ) ) {
-        graphstate.insertEdge ( closelegs[i].from, closelegs[i].to, closelegs[i].edgelabel );
-        OUTPUT(closelegs[i].frequency)
+      if ( closelegs[i]->tuple.from == from &&
+           closelegs[i]->tuple.to == to &&
+           isnormal ( closelegs[i]->tuple.label ) ) {
+        graphstate.insertEdge ( closelegs[i]->tuple.from, closelegs[i]->tuple.to, closelegs[i]->tuple.label );
+        OUTPUT(closelegs[i]->occurrences.frequency)
         int addsize = statistics.patternsize + graphstate.edgessize - graphstate.nodes.size ();
         if ( addsize >= statistics.frequenttreenumbers.size () ) {
           statistics.frequenttreenumbers.resize ( addsize + 1, 0 );
@@ -311,7 +391,7 @@ void Path::expand2 () {
           statistics.frequentgraphnumbers.resize ( addsize + 1, 0 );
         }
         statistics.frequentgraphnumbers[addsize]++;
-        graphstate.deleteEdge ( closelegs[i].from, closelegs[i].to );
+        graphstate.deleteEdge ( closelegs[i]->tuple.from, closelegs[i]->tuple.to );
         
         // DON'T RECURSE GRAPH GROWING!
         // only circle graphs can only grow from paths, all other graphs
@@ -321,7 +401,7 @@ void Path::expand2 () {
   }
 
   for ( int i = 0; i < legs.size (); i++ ) {
-    Leg &tuple = legs[i];
+    PathTuple &tuple = legs[i]->tuple;
     if ( tuple.depth == nodelabels.size () - 1 ) {
       if ( tuple.nodelabel > nodelabels[0] ||
            ( tuple.nodelabel == nodelabels[0] &&
@@ -329,14 +409,14 @@ void Path::expand2 () {
                ( tuple.edgelabel == edgelabels[0] && backsymmetry <= 0 )
              )
            ) ) {
-        graphstate.insertNode ( tuple.connectingnode, tuple.edgelabel );
+        graphstate.insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
         Path path ( *this, i );
         path.expand2 ();
 	graphstate.deleteNode ();
       }
     }
     else
-      if ( tuple.depth == 0 ) {
+      if ( legs[i]->tuple.depth == 0 ) {
         if ( totalsymmetry &&
              ( tuple.nodelabel > nodelabels.back () ||
              ( tuple.nodelabel == nodelabels.back () &&
@@ -344,19 +424,19 @@ void Path::expand2 () {
                  ( tuple.edgelabel == edgelabels.back () && frontsymmetry >= 0 )
                )
              ) ) ) {
-          graphstate.insertNode ( tuple.connectingnode, tuple.edgelabel );
+          graphstate.insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
           Path path ( *this, i );
           path.expand2 ();
 	  graphstate.deleteNode ();
         }
       }
       else {
-        if ( ( totalsymmetry || tuple.depth <= edgelabels.size () / 2 ) &&
-	     ( tuple.depth != 1 || tuple.edgelabel >= edgelabels[0] ) &&
-	     ( tuple.depth != nodelabels.size () - 2 || tuple.edgelabel >= edgelabels.back () ) &&
+        if ( ( totalsymmetry || legs[i]->tuple.depth <= edgelabels.size () / 2 ) &&
+	     ( legs[i]->tuple.depth != 1 || legs[i]->tuple.edgelabel >= edgelabels[0] ) &&
+	     ( legs[i]->tuple.depth != nodelabels.size () - 2 || legs[i]->tuple.edgelabel >= edgelabels.back () ) &&
 	     phase > 1
 	   ) {
-          graphstate.insertNode ( tuple.connectingnode, tuple.edgelabel );
+          graphstate.insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
 	  PatternTree tree ( *this, i );
 	  tree.expand ();
 	  graphstate.deleteNode ();
@@ -369,16 +449,24 @@ void Path::expand2 () {
 }
 
 void Path::expand () {
-  expand2 ();
-  graphstate.deleteNode ();
+
+  for ( int i = 0; i < legs.size (); i++ ) {
+    PathTuple &tuple = legs[i]->tuple;
+    if ( tuple.nodelabel >= nodelabels[0] ) {
+      graphstate.insertNode ( tuple.connectingnode, tuple.edgelabel, legs[i]->occurrences.maxdegree );
+      Path path ( *this, i );
+      path.expand2 ();
+      graphstate.deleteNode ();
+    }
+  }
   graphstate.deleteStartNode ();
 }
 
 ostream &operator<< ( ostream &stream, Path &path ) {
-  stream << database.nodelabels[path.nodelabels[0]].inputlabel;
+  stream << /* database.nodelabels[ */ (int) path.nodelabels[0] /* ].inputlabel; */ << " ";
   for ( int i = 0; i < path.edgelabels.size (); i++ ) {
     //stream << (char) ( path.edgelabels[i] + 'A' ) << path.nodelabels[i+1];
-    stream << database.edgelabels[database.edgelabelsindexes[path.edgelabels[i]]].inputedgelabel << database.nodelabels[path.nodelabels[i+1]].inputlabel;
+    stream << /*database.edgelabels[database.edgelabelsindexes[*/ (int) path.edgelabels[i] /*]].inputedgelabel */ << " " <<  /* database.nodelabels[ */ (int) path.nodelabels[i+1] /* ].inputlabel */ << " ";
   }
   return stream;
 }

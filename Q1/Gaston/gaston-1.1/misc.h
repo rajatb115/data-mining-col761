@@ -10,24 +10,18 @@ typedef unsigned char EdgeLabel; // combined node-edge label of the input file.
 typedef unsigned char NodeLabel;
 typedef unsigned short NodeId;
 typedef unsigned int Depth; // unsigned int is more efficient than short, but requires more memory...
-typedef unsigned short Tid;
+typedef unsigned int Tid;
 typedef unsigned int Frequency;
-#define PATMASKTYPE unsigned int
-  // for longer patterns: use unsigned long long, but this is considerably slower on 32 bit PCs.
-  // It is better to discard masks in that case.
 
 extern Frequency minfreq;
 
 #define NOTID ((Tid) -1)
 #define NOEDGELABEL ((EdgeLabel) -1)
 #define MAXEDGELABEL NOEDGELABEL
-#define MINEDGELABEL 0
 #define NONODELABEL ((NodeLabel) -1)
 #define NODEPTH ((Depth) -1)
 #define NOLEG (-1)
 #define NONODE ((NodeId) -1)
-
-#define MAXPATSIZE ((sizeof(PATMASKTYPE)*8))
 
 // this macro can be used when push_back-ing large structures. In stead of first allocating a local
 // variable and pushing this, one first pushes and defines a reference to the space in the vector.
@@ -46,7 +40,7 @@ extern int maxsize; // maximal size
 void puti ( FILE *f, int i );
 extern FILE *output;
 
-#define OUTPUT(frequency) if ( dooutput /* && ( ( (int) graphstate.edgessize ) - ( (int) graphstate.nodes.size () ) ) >= 0 */ ) { putc ( '#', output ); putc ( ' ', output ); puti ( output, frequency ); putc ( '\n', output ); graphstate.print ( output ); }
+#define OUTPUT(frequency) if ( dooutput  ) { putc ( '#', output ); putc ( ' ', output ); puti ( output, frequency ); putc ( '\n', output ); graphstate.print ( output ); }
 
 inline void setmax ( short unsigned int &a, short unsigned int b ) { if ( b > a ) a = b; }
 
