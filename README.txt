@@ -25,5 +25,6 @@ Q1 - To run Q1.sh script use the command given below. It will generate the runni
 Q2  - To run Q2.sh script use the command given below. It will generate the running time vs dimentions plot for k-NN query on KD-Tree, M-Tree and Bruteforce.
       sh Q2.sh <data> <plot_name>
       
-
-Our code will take the raw (unprocessed) data as given in the assignment and generate the plot.
+# Note
+1. Our code will take the raw (unprocessed) data as given in the assignment and generate the plot.
+2. HPC was behaving very weirdly while running these algorithms. We were getting variation in running time of the algorithms every time, this is due to the loding time of some pre-requsite modules used by these algorithms, some time they get loaded very fast and othertimes slow.
