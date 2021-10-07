@@ -9,10 +9,21 @@ Shreyans J Nagori - 2018CS10390
 
 Implementation :
 
-gSpan:
-./gSpan-64 -f < input file > -s <.95>
+To run Q1.sh and Q2.sh in hpc we need to load some modules. We tried loading various combination of the the modules but this is the final module list that is required to be loaded before execution of these files.
 
-FSG :
-./fsg -s 95 < input file >
+module load compiler/gcc/7.1.0/compilervars
+module load pythonpackages/3.6.0/matplotlib/3.0.2/gnu
+module load pythonpackages/3.6.0/scipy/1.1.0/gnu
+module load compiler/intel/2019u5/intelpython3
+module load pythonpackages/3.6.0/numpy/1.16.1/gnu
 
+Note - We tried to run the code after loading these modules in different order but the code didn't worked and raised various exceptions. It is recommended to load these modules in the same order as given.
 
+Q1 - To run Q1 use the command given below.
+      sh Q1.sh <data> <plot_name>
+
+Q2  - To run Q2 use the command given below.
+      sh Q2.sh <data> <plot_name>
+      
+
+Our code will take the raw (unprocessed) data as given in the assignment and generate the plot.
