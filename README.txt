@@ -7,7 +7,7 @@ Chhavi Agarwal - 2020CSY7654
 Shreyans J Nagori - 2018CS10390
 
 
-Implementation :
+# Implementation :
 
 To run Q1.sh and Q2.sh in hpc we need to load some modules. We tried loading various combination of the the modules but this is the final module list that is required to be loaded before execution of these files.
 
@@ -19,10 +19,10 @@ module load pythonpackages/3.6.0/numpy/1.16.1/gnu
 
 Note - We tried to run the code after loading these modules in different order but the code didn't worked and raised various exceptions. It is recommended to load these modules in the same order as given.
 
-Q1 - To run Q1 use the command given below.
+Q1 - To run Q1.sh script use the command given below. It will generate the running time vs support threshod plot for FSG , gSpan and Gaston.
       sh Q1.sh <data> <plot_name>
 
-Q2  - To run Q2 use the command given below.
+Q2  - To run Q2.sh script use the command given below. It will generate the running time vs dimentions plot for k-NN query on KD-Tree, M-Tree and Bruteforce.
       sh Q2.sh <data> <plot_name>
       
 
