@@ -11,7 +11,7 @@ import sys
 
 
 ###
-#  python3 q2-gatv2conv.py <number of epochs> <learning rate> <num_train_per_class> <model name>
+#  python3 Q2-gatv2conv.py <number of epochs> <learning rate> <num_train_per_class> <model name>
 ###
 
 debug = True
