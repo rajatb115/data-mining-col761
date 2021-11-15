@@ -50,6 +50,7 @@ for i in range(0,len(test_vertices[0])):
 x_test = np.array(x_test)
 y_test = np.array(y_test)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 data1 = dataset[0].to(device)
 best_model = torch.load("model")
 loss_func = nn.MSELoss()
