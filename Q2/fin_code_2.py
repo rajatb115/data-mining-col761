@@ -185,6 +185,8 @@ for i in range(0,epoch):
 
 print("Training Done.")
 
+torch.save(best_model,"model")
+
 import matplotlib.pyplot as plt
 val_acc = np.array(val_acc)
 x_axis = [i for i in range(0,10)]
