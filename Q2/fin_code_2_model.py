@@ -29,41 +29,6 @@ def matexpo(mat,power):
 Transition_fin = matexpo(Transition,0)+ matexpo(Transition,1) + matexpo(Transition,2) + matexpo(Transition,3)+ matexpo(Transition,4)
 Transition_fin = Transition_fin / 5.00
 
-x_train = []
-y_train = []
-train_vertices = np.where(dataset[0].train_mask==True)
-for i in range(0,len(train_vertices[0])):
-    remaining= np.delete(train_vertices[0],i)
-    store_vec = np.zeros(vertices)
-    store_vec[train_vertices[0][i]]=1 
-    distances = np.dot(Transition_fin,store_vec).reshape(-1)
-  #  non_zero_sample = np.where(distances>0)
-  #  zero_sample =  np.where(distances==0)
-  #  random_sample = np.concatenate((np.random.choice(non_zero_sample[0],10),np.random.choice(zero_sample[0],20)))
-    for j in range(0,len(train_vertices[0])):
-        x_train.append([train_vertices[0][i],train_vertices[0][j]])
-        y_train.append(distances[train_vertices[0][j]])
-
-x_train = np.array(x_train)
-y_train = np.array(y_train)
-
-x_val = []
-y_val = []
-val_vertices = np.where(dataset[0].val_mask==True)
-for i in range(0,len(val_vertices[0])):
-    remaining= np.delete(val_vertices[0],i)
-    store_vec = np.zeros(vertices)
-    store_vec[val_vertices[0][i]]=1 
-    distances = np.dot(Transition_fin,store_vec).reshape(-1)
-#    non_zero_sample = np.where(distances>0)
-#    zero_sample =  np.where(distances==0)
-#    random_sample = np.concatenate((np.random.choice(non_zero_sample[0],5),np.random.choice(zero_sample[0],5)))
-    for j in range(0,len(val_vertices[0])):
-        x_val.append([val_vertices[0][i],val_vertices[0][j]])
-        y_val.append(distances[val_vertices[0][j]])
-
-x_val = np.array(x_val)
-y_val = np.array(y_val)
 
 #Preparation of test_data
 x_test = []
@@ -85,13 +50,15 @@ for i in range(0,len(test_vertices[0])):
 x_test = np.array(x_test)
 y_test = np.array(y_test)
 
+data1 = dataset[0].to(device)
 best_model = torch.load("model")
+loss_func = nn.MSELoss()
 
-import matplotlib.pyplot as plt
-val_acc = np.array(val_acc)
-x_axis = [i for i in range(0,10)]
-plt.plot(x_axis,val_acc)
-plt.show()
+x_test_fin = torch.from_numpy(x_test)
+x_test_fin = x_test_fin.to(device)
+y_test_fin = torch.from_numpy(y_test)
+y_test_fin = y_test_fin.to(device)
+
 
 pred_test = best_model(data1,x_test_fin).flatten()
 y_test_fin = y_test_fin.float()
