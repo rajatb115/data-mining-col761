@@ -8,4 +8,9 @@ Shreyans J Nagori - 2018CS10390
 
 # Part 1
 
-To run the code use : python3 Q1.py filename
+To run the code for Q1:
+./Q1.sh
+
+To run the code for Q2 : 
+./Q2.sh 0 (for training from scratch)
+./Q2.sh 1 (for using the already trained model)
