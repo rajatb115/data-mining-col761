@@ -191,7 +191,8 @@ import matplotlib.pyplot as plt
 val_acc = np.array(val_acc)
 x_axis = [i for i in range(0,10)]
 plt.plot(x_axis,val_acc)
-plt.show()
+plt.savefig("plot.png")
+#plt.show()
 
 pred_test = best_model(data1,x_test_fin).flatten()
 y_test_fin = y_test_fin.float()
