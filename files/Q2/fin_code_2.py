@@ -155,7 +155,7 @@ for i in range(0,epoch):
     pred_val = model_fin(data1,x_train_fin).flatten()
     y_train_fin= y_train_fin.float()
     loss1 = loss_func(pred_val,y_train_fin)
-    print(f"Value of training loss for epoch {i} is: ",loss1.item())  
+    # print(f"Value of training loss for epoch {i} is: ",loss1.item())  
     optimizer.zero_grad()  
     loss1.backward()
     optimizer.step()
@@ -165,7 +165,7 @@ for i in range(0,epoch):
     y_val_fin = y_val_fin.float()
     loss1 = loss_func(pred_val,y_val_fin)
     val_acc.append(loss1.item())
-    print(f"Value of validation loss for epoch {i} is: ",loss1.item())    
+    # print(f"Value of validation loss for epoch {i} is: ",loss1.item())    
     if best_model is None:
         best_model = model_fin
         val_loss = loss1.item()
@@ -193,7 +193,7 @@ x_axis = [i for i in range(0,10)]
 plt.plot(x_axis,val_acc)
 plt.show()
 
-pred_test = model_fin(data1,x_test_fin).flatten()
+pred_test = best_model(data1,x_test_fin).flatten()
 y_test_fin = y_test_fin.float()
 loss1 = loss_func(pred_test,y_test_fin)
 test_loss = loss1.item()
