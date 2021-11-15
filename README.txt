@@ -25,3 +25,5 @@ pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-${TORCH}+${
 pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html --user
 pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html --user
 pip3 install torch-geometric -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html --user
+
+we are using the Python 3.6.10 and GCC 7.3.0 for running the code.
