@@ -55,12 +55,12 @@ for i in range(0,len(val_vertices[0])):
     store_vec = np.zeros(vertices)
     store_vec[val_vertices[0][i]]=1 
     distances = np.dot(Transition_fin,store_vec).reshape(-1)
-    non_zero_sample = np.where(distances>0)
-    zero_sample =  np.where(distances==0)
-    random_sample = np.concatenate((np.random.choice(non_zero_sample[0],5),np.random.choice(zero_sample[0],5)))
-    for j in range(0,10):
-        x_val.append([val_vertices[0][i],random_sample[j]])
-        y_val.append(distances[random_sample[j]])
+#    non_zero_sample = np.where(distances>0)
+#    zero_sample =  np.where(distances==0)
+#    random_sample = np.concatenate((np.random.choice(non_zero_sample[0],5),np.random.choice(zero_sample[0],5)))
+    for j in range(0,len(val_vertices[0])):
+        x_val.append([val_vertices[0][i],val_vertices[0][j]])
+        y_val.append(distances[val_vertices[0][j]])
 
 x_val = np.array(x_val)
 y_val = np.array(y_val)
@@ -122,7 +122,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_fin = combined_model(500,400)
 model_fin = model_fin.to(device)
 
-epoch = 20
+epoch = 10
 x_train_fin = torch.from_numpy(x_train)
 x_train_fin = x_train_fin.to(device)
 y_train_fin = torch.from_numpy(y_train)
@@ -187,7 +187,7 @@ print("Training Done.")
 
 import matplotlib.pyplot as plt
 val_acc = np.array(val_acc)
-x_axis = [i for i in range(0,100)]
+x_axis = [i for i in range(0,10)]
 plt.plot(x_axis,val_acc)
 plt.show()
 
