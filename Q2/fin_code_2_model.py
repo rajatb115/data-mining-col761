@@ -50,6 +50,39 @@ for i in range(0,len(test_vertices[0])):
 x_test = np.array(x_test)
 y_test = np.array(y_test)
 
+
+from torch_geometric.nn import GATConv,GATv2Conv,MemPooling
+class GAT(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = GATv2Conv(in_channels= -1, out_channels= 250)
+        self.conv2 = GATv2Conv(in_channels= 250, out_channels= 250, concat=False)
+        
+    def forward(self,data):
+        x, edge_index = data.x, data.edge_index
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        return x
+   
+class combined_model(nn.Module):
+    def __init__(self,input_dim,hidden_dim):
+        super().__init__()
+        self.layer1 = GAT()
+        self.mlp1 = nn.Linear(input_dim,hidden_dim)
+        self.mlp2 = nn.Linear(hidden_dim,1)
+
+    def forward(self,data,x):
+        embeddings = self.layer1(data)
+        x1 = torch.index_select(embeddings,0,x.T[0].flatten())
+        y1 = torch.index_select(embeddings,0,x.T[1].flatten())
+        store = torch.cat((x1,y1),dim=1)
+        store = self.mlp1(store)
+        store = F.relu(store)
+        store = self.mlp2(store)
+        store = F.relu(store)
+        return store
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 data1 = dataset[0].to(device)
 best_model = torch.load("model")
